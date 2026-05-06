@@ -51,4 +51,28 @@ public class HexCorner : MonoBehaviour
 
         Debug.Log($"Colțul {gameObject.name} a primit bonus de port: {type}");
     }
+
+    public bool IsValidForSettlement()
+    {
+        // 1. Dacă acest colț e deja ocupat, evident că nu se poate
+        if (isOccupied) return false;
+
+        // 2. Verificăm toți vecinii direcți prin intermediul drumurilor
+        foreach (HexEdge edge in adjacentEdges)
+        {
+            if (edge != null)
+            {
+                // Găsim "celălalt" colț de la capătul drumului
+                HexCorner neighbor = (edge.corner1 == this) ? edge.corner2 : edge.corner1;
+
+                if (neighbor != null && neighbor.isOccupied)
+                {
+                    // Am găsit un vecin care are deja casă! Regula de distanță încălcată.
+                    return false;
+                }
+            }
+        }
+
+        return true; // Niciun vecin ocupat, e liber la construit!
+    }
 }

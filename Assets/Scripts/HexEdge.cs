@@ -5,6 +5,8 @@ public class HexEdge : MonoBehaviour
     public GameObject previewCircle; // Cercul de preview
     public GameObject roadSprite;    // Sprite-ul drumului albastru
     public bool isOccupied = false;
+    public HexCorner corner1;
+    public HexCorner corner2;
 
     private void Awake()
     {

@@ -32,14 +32,7 @@ public class MapGenerator : MonoBehaviour
         Debug.Log("Este rândul jucătorului: " + currentPlayer);
 
         // Reactivăm toate punctele negre (colțurile) care nu sunt ocupate
-        foreach (var cornerObj in uniqueCorners.Values)
-        {
-            HexCorner corner = cornerObj.GetComponent<HexCorner>();
-            if (!corner.isOccupied)
-            {
-                cornerObj.SetActive(true);
-            }
-        }
+        UpdateValidCorners();
     }
 
     [Header("Setup Visual")]
@@ -330,6 +323,9 @@ public class MapGenerator : MonoBehaviour
                 HexCorner scriptA = cornerObjects[i].GetComponent<HexCorner>();
                 HexCorner scriptB = cornerObjects[next].GetComponent<HexCorner>();
 
+                edgeScript.corner1 = scriptA;
+                edgeScript.corner2 = scriptB;
+
                 // Adăugăm referința drumului în listele colțurilor, evitând duplicatele
                 if (!scriptA.adjacentEdges.Contains(edgeScript))
                 {
@@ -345,6 +341,7 @@ public class MapGenerator : MonoBehaviour
             {
                 Debug.LogError("Prefabul de drum nu are scriptul HexEdge atașat!");
             }
+
         }
     }
     public void FinishRoadPlacement()
@@ -374,6 +371,28 @@ public class MapGenerator : MonoBehaviour
         foreach (Harbor h in allHarbors)
         {
             h.AssignToCorners();
+        }
+    }
+
+    public void UpdateValidCorners()
+    {
+        foreach (var cornerObj in uniqueCorners.Values)
+        {
+            if (cornerObj == null) continue;
+
+            HexCorner cornerScript = cornerObj.GetComponent<HexCorner>();
+
+            // Folosim logica IsValidForSettlement pe care am scris-o anterior
+            // Dacă locul e deja ocupat SAU încalcă regula de distanță față de vecini
+            if (!cornerScript.IsValidForSettlement())
+            {
+                cornerObj.SetActive(false);
+            }
+            else
+            {
+                // Dacă locul e valid, îl facem vizibil pentru noul jucător
+                cornerObj.SetActive(true);
+            }
         }
     }
 }

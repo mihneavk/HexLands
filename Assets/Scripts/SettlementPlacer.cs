@@ -28,6 +28,15 @@ public class SettlementPlacer : MonoBehaviour
                         // 3. Marcăm colțul ca ocupat
                         corner.BuildSettlement();
                     }
+                    if (corner.IsValidForSettlement())
+                    {
+                        corner.BuildSettlement();
+                    }
+                    else
+                    {
+                        Debug.Log("Prea aproape de altă casă! Regula de distanță nu permite.");
+                        // Opțional: Poți pune un sunet de "eroare" aici
+                    }
                 }
                 // Dacă am dat click pe un cerc de drum (Preview)
                 else if (hit.collider.CompareTag("Edge"))
