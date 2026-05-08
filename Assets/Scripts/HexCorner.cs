@@ -7,14 +7,16 @@ public class HexCorner : MonoBehaviour
     public GameObject currentSettlement; // Referință către sprite-ul căsuței
 
     public List<HexEdge> adjacentEdges = new List<HexEdge>();
+    public MapGenerator.Player owner; // Salvăm cine a pus casa
 
     // În HexCorner.cs
 
-    public void BuildSettlement()
+    public void BuildSettlement(MapGenerator.Player player)
     {
         if (isOccupied) return;
 
         isOccupied = true;
+        owner = player;
         MapGenerator mg = FindObjectOfType<MapGenerator>();
 
         SpriteRenderer houseSR = GetComponent<SpriteRenderer>();

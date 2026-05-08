@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using static HexData;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -24,10 +25,18 @@ public class MapGenerator : MonoBehaviour
         return currentPlayer == Player.Blue ? blueRoad : orangeRoad;
     }
 
+    [Header("Debug / Testing")]
+    public int turnCounter = 1;
+
     public void PrepareNextPlayer()
     {
         if (currentPlayer == Player.Blue) currentPlayer = Player.Orange;
         else currentPlayer = Player.Blue;
+
+        DiceController dc = FindObjectOfType<DiceController>();
+        if (dc != null) dc.ResetDice();
+
+        turnCounter++;
 
         Debug.Log("Este rândul jucătorului: " + currentPlayer);
 
@@ -105,7 +114,9 @@ public class MapGenerator : MonoBehaviour
         }
 
         if (safetyBreak >= 100) Debug.LogWarning("Nu s-a putut genera o hartă validă după 100 încercări.");
+
         InitializeHarbors();
+        SetupInitialRobber();
     }
 
     private bool ValidateCatanRules()
@@ -158,6 +169,25 @@ public class MapGenerator : MonoBehaviour
                 HexData.ResourceType type = resourcePool[resourceIndex++];
                 int number = (type != HexData.ResourceType.Desert) ? numberPool[numberIndex++] : 0;
                 CreateHex(q, r, type, number);
+            }
+        }
+    }
+
+    public void SetupInitialRobber()
+    {
+        // 1. Luăm toate obiectele care au scriptul HexTile (sau cum se numește scriptul tău de pe hexagon)
+        HexData[] allTiles = FindObjectsOfType<HexData>();
+
+        foreach (HexData tile in allTiles)
+        {
+            // 2. Verificăm care dintre ele este Desert
+            // Presupunând că ai o variabilă resourceType în scriptul HexTile
+            if (tile.resourceType == ResourceType.Desert)
+            {
+                // 3. Plasăm hoțul pe poziția acelui hexagon
+                Debug.Log("Am gasit desertul");
+                PlaceRobberOnDesert(tile.transform.position);
+                break; // Am găsit desertul, ne putem opri
             }
         }
     }
@@ -392,6 +422,141 @@ public class MapGenerator : MonoBehaviour
             {
                 // Dacă locul e valid, îl facem vizibil pentru noul jucător
                 cornerObj.SetActive(true);
+            }
+        }
+    }
+
+    [Header("Referință Hoț")]
+    public GameObject robberPrefab;
+    private GameObject spawnedRobber; // Păstrăm referința pentru a-l putea muta ulterior
+
+    public void PlaceRobberOnDesert(Vector3 desertPosition)
+    {
+        // Ajustăm înălțimea. 0.3f este o valoare de test, o poți mări dacă vrei mai sus.
+        float yOffset = 0.02f;
+        Vector3 adjustedPos = new Vector3(desertPosition.x, desertPosition.y + yOffset, -2f);
+
+        if (spawnedRobber == null)
+        {
+            spawnedRobber = Instantiate(robberPrefab, adjustedPos, Quaternion.identity);
+        }
+        else
+        {
+            spawnedRobber.transform.position = adjustedPos;
+        }
+    }
+
+    public bool isMovingRobber = false;
+    private HexData currentRobberHex;
+
+    // Chemăm asta când zarul dă 7
+    public void StartRobberPhase()
+    {
+        isMovingRobber = true;
+        Debug.Log("Avem 7. Pune unde vrei");
+        // Punem toate hexagoanele să pulseze
+        HexData[] allHexes = FindObjectsOfType<HexData>();
+        foreach (HexData hex in allHexes)
+        {
+            // Opțional: nu pulsa deșertul sau hexagonul unde este deja hoțul
+            if (!hex.hasRobber)
+            {
+                hex.StartPulsing();
+            }
+        }
+    }
+
+    public void MoveRobberToHex(HexData targetHex)
+    {
+        // Regula: Să nu fie același hexagon
+        if (targetHex == currentRobberHex)
+        {
+            Debug.Log("Trebuie să muți hoțul pe ALT hexagon!");
+            return;
+        }
+
+        // 1. Curățăm vechiul hexagon
+        if (currentRobberHex != null) currentRobberHex.hasRobber = false;
+
+        // 2. Setăm noul hexagon
+        targetHex.hasRobber = true;
+        currentRobberHex = targetHex;
+
+        // 3. Mutăm vizual pionul (folosind offset-ul de data trecută)
+        PlaceRobberOnDesert(targetHex.transform.position);
+        HexData[] allHexes = FindObjectsOfType<HexData>();
+        foreach (HexData hex in allHexes)
+        {
+            hex.StopPulsing();
+        }
+        // 4. Ieșim din faza de mutare
+        isMovingRobber = false;
+        Debug.Log("Hoțul a fost mutat!");
+    }
+    public void DistributeResources(int diceRoll)
+    {
+        // Căutăm toate hexagoanele
+        HexData[] allHexes = FindObjectsOfType<HexData>();
+
+        foreach (HexData hex in allHexes)
+        {
+            // 1. Verificăm dacă numărul de pe hex coincide cu zarul și NU are hoțul pe el
+            if (hex.tokenNumber == diceRoll && !hex.hasRobber)
+            {
+                // 2. Verificăm toate cele 6 colțuri ale hexagonului
+                foreach (HexCorner corner in hex.adjacentCorners)
+                {
+                    if (corner.isOccupied)
+                    {
+                        // 3. Dăm resursa proprietarului colțului
+                        FindObjectOfType<PlayerResourceManager>().AddResource(corner.owner, hex.resourceType, 1);
+                    }
+                }
+            }
+        }
+    }
+
+    public void PopulateHexCorners(GameObject hexObj, Vector3 hexPos)
+    {
+        HexData hexData = hexObj.GetComponent<HexData>();
+        if (hexData == null) return;
+
+        // Curățăm lista în caz că regenerăm harta
+        hexData.adjacentCorners.Clear();
+
+        // Calculăm cele 6 poziții ale colțurilor pentru acest hexagon
+        // Folosește aceeași logică/matematică pe care ai folosit-o la crearea colțurilor
+        for (int i = 0; i < 6; i++)
+        {
+            float angle_deg = 60 * i; // Poate fi 60 * i + 30 depinde de orientarea hex-ului tău
+            float angle_rad = Mathf.Deg2Rad * angle_deg;
+
+            // Dimensiunea hexagonului (size-ul pe care îl folosești deja)
+            float size = 1.0f;
+
+            Vector3 cornerPos = new Vector3(
+                hexPos.x + size * Mathf.Cos(angle_rad),
+                hexPos.y + size * Mathf.Sin(angle_rad),
+                0f
+            );
+
+            // Rotunjim poziția pentru a evita erorile de precizie float la căutarea în dicționar
+            Vector3 roundedPos = new Vector3(
+                Mathf.Round(cornerPos.x * 100f) / 100f,
+                Mathf.Round(cornerPos.y * 100f) / 100f,
+                0f
+            );
+
+            // Căutăm colțul în dicționarul tău de colțuri unice
+            if (uniqueCorners.ContainsKey(roundedPos))
+            {
+                HexCorner cornerScript = uniqueCorners[roundedPos].GetComponent<HexCorner>();
+
+                // Adăugăm referința în lista hexagonului
+                if (!hexData.adjacentCorners.Contains(cornerScript))
+                {
+                    hexData.adjacentCorners.Add(cornerScript);
+                }
             }
         }
     }

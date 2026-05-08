@@ -12,6 +12,7 @@ public class SettlementPlacer : MonoBehaviour
 
             if (hit.collider != null)
             {
+                MapGenerator mg = FindObjectOfType<MapGenerator>();
                 // Dacă am dat click pe un colț negru
                 if (hit.collider.CompareTag("Corner"))
                 {
@@ -22,15 +23,14 @@ public class SettlementPlacer : MonoBehaviour
                         GameObject newSettlement = Instantiate(settlementPrefab, corner.transform.position, Quaternion.identity);
 
                         // 2. Cerem sprite-ul corect de la MapGenerator
-                        MapGenerator mg = FindObjectOfType<MapGenerator>();
                         newSettlement.GetComponent<SpriteRenderer>().sprite = mg.GetCurrentHouseSprite();
 
                         // 3. Marcăm colțul ca ocupat
-                        corner.BuildSettlement();
+                        corner.BuildSettlement(mg.currentPlayer);
                     }
                     if (corner.IsValidForSettlement())
                     {
-                        corner.BuildSettlement();
+                        corner.BuildSettlement(mg.currentPlayer);
                     }
                     else
                     {
@@ -48,6 +48,24 @@ public class SettlementPlacer : MonoBehaviour
                         // Opțional: aici poți reactiva colțurile dacă vrei să pui altă casă
                     }
                 }
+            }
+
+            if (hit.collider != null)
+            {
+                MapGenerator mg = FindObjectOfType<MapGenerator>();
+
+                // VERIFICARE: Dacă suntem în faza de mutare hoț
+                if (mg.isMovingRobber && hit.collider.CompareTag("Hexagon"))
+                {
+                    HexData hex = hit.collider.GetComponent<HexData>();
+                    if (hex != null)
+                    {
+                        mg.MoveRobberToHex(hex);
+                    }
+                    return; // Oprim execuția aici ca să nu punem case din greșeală
+                }
+
+                // ... restul logicii pentru Corner și Edge ...
             }
         }
     }
