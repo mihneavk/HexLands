@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 8496119306787564865}
   - component: {fileID: 7193934700817753377}
   - component: {fileID: 9006452256705704288}
+  - component: {fileID: 7314200592303588240}
+  - component: {fileID: 6386917633498597883}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -106,3 +108,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settlementPrefab: {fileID: 0}
+  currentMode: 0
+--- !u!114 &7314200592303588240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4525268407689724480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9771134f71e06db4ab80b82dc80af943, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  currentPhase: 0
+  currentPlayer: 0
+  diceController: {fileID: 0}
+  buildUIManager: {fileID: 0}
+--- !u!114 &6386917633498597883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4525268407689724480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85ff716a532330b4a92f1baea9e8189b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildUIManager
+  buildSettlementBtn: {fileID: 0}
+  buildRoadBtn: {fileID: 0}
+  resourceManager: {fileID: 0}
+  gameManager: {fileID: 7314200592303588240}

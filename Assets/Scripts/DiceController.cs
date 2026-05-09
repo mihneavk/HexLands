@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class DiceController : MonoBehaviour
 {
@@ -12,10 +13,13 @@ public class DiceController : MonoBehaviour
     public bool hasRolled = false;
     public int lastResult = 0;
 
+    [Header("Control Flux")]
+    public bool canRoll = false; // Începe cu false pentru Setup
+
     // Metoda apelată când dai click pe zaruri (necesită Collider pe obiectul cu scriptul)
     private void OnMouseDown()
     {
-        if (!hasRolled)
+        if (!hasRolled && canRoll)
         {
             StartCoroutine(RollAnimation());
         }
@@ -86,6 +90,7 @@ public class DiceController : MonoBehaviour
 
     void Update()
     {
+        if (!canRoll) return;
         // Verificăm dacă s-a apăsat click stânga
         if (Input.GetMouseButtonDown(0))
         {
@@ -97,12 +102,19 @@ public class DiceController : MonoBehaviour
                 // Verificăm dacă obiectul lovit este unul dintre cele două zaruri
                 if (hit.collider.gameObject == dice1SR.gameObject || hit.collider.gameObject == dice2SR.gameObject)
                 {
-                    if (!hasRolled)
+                    if (!hasRolled && canRoll)
                     {
                         StartCoroutine(RollAnimation());
                     }
                 }
             }
         }
+    }
+    public void SetInteractable(bool state)
+    {
+        // Dacă ai un buton de UI
+        GetComponent<Button>().interactable = state;
+        // Sau dacă dai click pe un obiect 3D de zar
+        this.enabled = state;
     }
 }   

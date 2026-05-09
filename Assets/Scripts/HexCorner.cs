@@ -7,7 +7,7 @@ public class HexCorner : MonoBehaviour
     public GameObject currentSettlement; // Referință către sprite-ul căsuței
 
     public List<HexEdge> adjacentEdges = new List<HexEdge>();
-    public MapGenerator.Player owner; // Salvăm cine a pus casa
+    public MapGenerator.Player owner = MapGenerator.Player.None; // Salvăm cine a pus casa
 
     // În HexCorner.cs
 
@@ -76,5 +76,28 @@ public class HexCorner : MonoBehaviour
         }
 
         return true; // Niciun vecin ocupat, e liber la construit!
+    }
+
+    public bool HasAdjacentRoadOfPlayer(MapGenerator.Player player)
+    {
+        // Găsim managerul hărții pentru a accesa lista de muchii
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+        if (mg == null) return false;
+
+        // Trecem prin toate drumurile de pe hartă
+        foreach (HexEdge edge in mg.allEdges)
+        {
+            // Verificăm dacă drumul este construit și aparține jucătorului curent
+            if (edge.isOccupied && edge.owner == player)
+            {
+                // Verificăm dacă unul dintre capetele drumului atinge ACEST colț
+                if (edge.corner1 == this || edge.corner2 == this)
+                {
+                    return true; // Am găsit un drum conectat!
+                }
+            }
+        }
+
+        return false; // Nu am găsit niciun drum conectat
     }
 }

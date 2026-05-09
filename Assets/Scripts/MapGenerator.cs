@@ -7,8 +7,7 @@ using static UnityEditor.PlayerSettings;
 
 public class MapGenerator : MonoBehaviour
 {
-    public enum Player { Blue, Orange }
-    public Player currentPlayer = Player.Blue;
+    public enum Player { None, Blue, Orange }
 
     [Header("Sprite-uri Jucători")]
     public Sprite blueHouse;
@@ -16,14 +15,21 @@ public class MapGenerator : MonoBehaviour
     public Sprite blueRoad;
     public Sprite orangeRoad;
 
+    public HexData[] allHexes = null;
+    public HexCorner[] allCorners = null;
+    public HexEdge[] allEdges = null;
+
     public Sprite GetCurrentHouseSprite()
     {
-        return currentPlayer == Player.Blue ? blueHouse : orangeHouse;
+        // Căutăm jucătorul activ în singurul loc unde contează: GameManager
+        GameManager gm = FindObjectOfType<GameManager>();
+        return gm.currentPlayer == Player.Blue ? blueHouse : orangeHouse;
     }
 
     public Sprite GetCurrentRoadSprite()
     {
-        return currentPlayer == Player.Blue ? blueRoad : orangeRoad;
+        GameManager gm = FindObjectOfType<GameManager>();
+        return gm.currentPlayer == Player.Blue ? blueRoad : orangeRoad;
     }
 
     [Header("Debug / Testing")]
@@ -31,15 +37,11 @@ public class MapGenerator : MonoBehaviour
 
     public void PrepareNextPlayer()
     {
-        if (currentPlayer == Player.Blue) currentPlayer = Player.Orange;
-        else currentPlayer = Player.Blue;
 
         DiceController dc = FindObjectOfType<DiceController>();
         if (dc != null) dc.ResetDice();
 
         turnCounter++;
-
-        Debug.Log("Este rândul jucătorului: " + currentPlayer);
 
         // Reactivăm toate punctele negre (colțurile) care nu sunt ocupate
         UpdateValidCorners();
@@ -116,7 +118,8 @@ public class MapGenerator : MonoBehaviour
 
         if (safetyBreak >= 100) Debug.LogWarning("Nu s-a putut genera o hartă validă după 100 încercări.");
 
-        HexData[] allHexes = FindObjectsOfType<HexData>();
+        allHexes = FindObjectsOfType<HexData>();
+        allCorners = FindObjectsOfType<HexCorner>();
 
         // 4. APELUL CORECT:
         foreach (HexData hex in allHexes)
@@ -124,6 +127,8 @@ public class MapGenerator : MonoBehaviour
             // Trimitem atât obiectul (hex.gameObject) cât și poziția lui (hex.transform.position)
             PopulateHexCorners(hex.gameObject, hex.transform.position);
         }
+
+        allEdges = FindObjectsOfType<HexEdge>();
         InitializeHarbors();
         SetupInitialRobber();
     }
@@ -437,7 +442,7 @@ public class MapGenerator : MonoBehaviour
             else
             {
                 // Dacă locul e valid, îl facem vizibil pentru noul jucător
-                cornerObj.SetActive(true);
+                //cornerObj.SetActive(true);
             }
         }
     }

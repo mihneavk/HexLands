@@ -12,6 +12,7 @@ public class PlayerResourceManager : MonoBehaviour
 
     public ResourceWallet bluePlayer;
     public ResourceWallet orangePlayer;
+    public BuildUIManager buildUIManager;
 
     public void AddResource(MapGenerator.Player player, HexData.ResourceType type, int amount)
     {
@@ -27,6 +28,7 @@ public class PlayerResourceManager : MonoBehaviour
         }
 
         UpdateUI(wallet); // Actualizăm textul de pe ecran
+        buildUIManager.RefreshButtons();
         Debug.Log($"Jucătorul {player} a primit {amount} {type}.");
     }
 
@@ -49,5 +51,35 @@ public class PlayerResourceManager : MonoBehaviour
                 Debug.LogError($"Obiectul {wallet.uiDisplayObject.name} nu are o componentă TextMeshProUGUI pe el!");
             }
         }
+    }
+
+    // În PlayerResourceManager.cs
+
+    public bool CanAffordSettlement(MapGenerator.Player player)
+    {
+        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        // Cost: 1 Lemn, 1 Argilă, 1 Lână, 1 Grâu
+        return wallet.wood >= 1 && wallet.brick >= 1 && wallet.sheep >= 1 && wallet.wheat >= 1;
+    }
+
+    public void SpendForSettlement(MapGenerator.Player player)
+    {
+        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        wallet.wood--; wallet.brick--; wallet.sheep--; wallet.wheat--;
+        UpdateUI(wallet); // Actualizăm textul de pe ecran
+    }
+
+    public bool CanAffordRoad(MapGenerator.Player player)
+    {
+        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        // Cost: 1 Lemn, 1 Argilă
+        return wallet.wood >= 1 && wallet.brick >= 1;
+    }
+
+    public void SpendForRoad(MapGenerator.Player player)
+    {
+        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        wallet.wood--; wallet.brick--;
+        UpdateUI(wallet);
     }
 }
