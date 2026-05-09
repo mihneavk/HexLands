@@ -235,4 +235,31 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    [Header("Bonusuri")]
+    public bool blueHasLongestRoadBonus = false;
+    public bool orangeHasLongestRoadBonus = false;
+
+    public void CheckLongestRoad(MapGenerator.Player player)
+    {
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+        int length = mg.GetLongestRoadForPlayer(player);
+
+        Debug.Log($"Lungime drum pentru {player}: {length}");
+
+        if (length >= 5)
+        {
+            if (player == MapGenerator.Player.Blue && !blueHasLongestRoadBonus)
+            {
+                blueHasLongestRoadBonus = true;
+                AddVictoryPoint(player, 2);
+                Debug.Log("<color=blue>Albastru a primit bonusul pentru Cel Mai Lung Drum!</color>");
+            }
+            else if (player == MapGenerator.Player.Orange && !orangeHasLongestRoadBonus)
+            {
+                orangeHasLongestRoadBonus = true;
+                AddVictoryPoint(player, 2);
+                Debug.Log("<color=orange>Portocaliu a primit bonusul pentru Cel Mai Lung Drum!</color>");
+            }
+        }
+    }
 }

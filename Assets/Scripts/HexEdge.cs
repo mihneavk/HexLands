@@ -128,6 +128,8 @@ public class HexEdge : MonoBehaviour
             FindObjectOfType<BuildUIManager>().RefreshButtons();
         }
 
+        gm.CheckLongestRoad(this.owner);
+
         // 3. ANUNȚĂM managerul să treacă la următorul jucător
         gm.OnRoadFinished();
 

@@ -619,4 +619,49 @@ public class MapGenerator : MonoBehaviour
             }
         }
     }
+    public int GetLongestRoadForPlayer(Player player)
+    {
+        int maxLength = 0;
+        List<HexEdge> playerEdges = new List<HexEdge>();
+
+        // 1. Colectăm toate drumurile care aparțin jucătorului
+        foreach (var edge in allEdges)
+        {
+            if (edge.isOccupied && edge.owner == player)
+                playerEdges.Add(edge);
+        }
+
+        // 2. Pentru fiecare drum, încercăm să găsim cel mai lung drum care pornește de acolo
+        foreach (var startEdge in playerEdges)
+        {
+            maxLength = Mathf.Max(maxLength, ExploreRoad(startEdge, player, new List<HexEdge>()));
+        }
+
+        return maxLength;
+    }
+
+    private int ExploreRoad(HexEdge currentEdge, Player player, List<HexEdge> visited)
+    {
+        visited.Add(currentEdge);
+        int maxSubPath = 0;
+
+        // Verificăm ambele capete ale drumului (Corner 1 și Corner 2)
+        HexCorner[] corners = { currentEdge.corner1, currentEdge.corner2 };
+
+        foreach (var corner in corners)
+        {
+            // REGULĂ CATAN: Nu poți trece cu drumul printr-o casă inamică!
+            if (corner.isOccupied && corner.owner != player) continue;
+
+            foreach (var nextEdge in corner.adjacentEdges)
+            {
+                if (nextEdge != null && nextEdge.isOccupied && nextEdge.owner == player && !visited.Contains(nextEdge))
+                {
+                    maxSubPath = Mathf.Max(maxSubPath, ExploreRoad(nextEdge, player, new List<HexEdge>(visited)));
+                }
+            }
+        }
+
+        return 1 + maxSubPath;
+    }
 }
