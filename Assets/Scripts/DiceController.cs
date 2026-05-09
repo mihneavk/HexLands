@@ -58,6 +58,7 @@ public class DiceController : MonoBehaviour
         }
 
         lastResult = roll1 + roll2;
+        FindObjectOfType<GameManager>().hasRolled = true;
         Debug.Log($"Rezultat: {lastResult}");
 
         // --- AICI ADĂUGĂM TRANSPARENȚA ---

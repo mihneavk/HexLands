@@ -6,6 +6,7 @@ public class GameManager : MonoBehaviour
 {
     public enum GamePhase { Setup, Gameplay }
     public GamePhase currentPhase = GamePhase.Setup;
+    public bool hasRolled = false;
 
     // Folosim Player din MapGenerator pentru consistență
     public MapGenerator.Player currentPlayer;
@@ -27,6 +28,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         // Începem cu primul din listă (Albastru)
+        hasRolled = true;
         currentPlayer = setupOrder[0];
         diceController.canRoll = false;
         Debug.Log($"Faza Setup: {currentPlayer} plasează prima casă și drum.");
@@ -124,6 +126,7 @@ public class GameManager : MonoBehaviour
 
     private void StartGameplay()
     {
+        hasRolled = false;
         SettlementPlacer settlementPlacer = FindAnyObjectByType<SettlementPlacer>();
         settlementPlacer.SetVisualsVisibility();
         buildUIManager.RefreshButtons();
@@ -148,6 +151,12 @@ public class GameManager : MonoBehaviour
         // 0. Nu lăsăm skip în setup (regulament Catan)
         if (currentPhase == GamePhase.Setup) return;
 
+        if (!hasRolled)
+        {
+            Debug.LogWarning("Trebuie să dai cu zarul înainte de a termina tura!");
+            return;
+        }
+
         // 1. Schimbăm jucătorul și resetăm stările interne
         currentPlayer = (currentPlayer == MapGenerator.Player.Blue) ?
                          MapGenerator.Player.Orange : MapGenerator.Player.Blue;
@@ -163,6 +172,7 @@ public class GameManager : MonoBehaviour
         sp.SetVisualsVisibility();
 
         // 4. Resetăm zarurile pentru noul jucător
+        hasRolled = false;
         diceController.canRoll = true;
         diceController.ResetDice();
         buildUIManager.RefreshButtons(); 

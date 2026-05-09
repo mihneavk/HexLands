@@ -8,8 +8,24 @@ public class SettlementPlacer : MonoBehaviour
     public enum BuildMode { None, PlacingSettlement, PlacingRoad }
     public BuildMode currentMode = BuildMode.None;
 
-    public void ActivateSettlementMode() { currentMode = BuildMode.PlacingSettlement; SetVisualsVisibility(); }
-    public void ActivateRoadMode() { currentMode = BuildMode.PlacingRoad; SetVisualsVisibility();
+    public void ActivateSettlementMode() {
+        GameManager gm = FindObjectOfType<GameManager>();
+        if (!gm.hasRolled && gm.currentPhase != GameManager.GamePhase.Setup)
+        {
+            Debug.LogWarning("Dă cu zarul mai întâi!");
+            return;
+        }
+
+        currentMode = BuildMode.PlacingSettlement; SetVisualsVisibility(); }
+    public void ActivateRoadMode() {
+        GameManager gm = FindObjectOfType<GameManager>();
+        if (!gm.hasRolled && gm.currentPhase != GameManager.GamePhase.Setup)
+        {
+            Debug.LogWarning("Dă cu zarul mai întâi!");
+            return;
+        }
+
+        currentMode = BuildMode.PlacingRoad; SetVisualsVisibility();
         Debug.Log("SUNTEM IN ROADMODE");
     }
 
