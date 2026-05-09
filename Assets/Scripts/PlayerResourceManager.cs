@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
+using TMPro; // Obligatoriu pentru TextMeshPro
 
 public class PlayerResourceManager : MonoBehaviour
 {
-    // Structură pentru a vedea resursele frumos în Inspector
     [System.Serializable]
     public class ResourceWallet
     {
         public int wood, brick, sheep, wheat, ore;
+        public GameObject uiDisplayObject; // Referință către textul de pe ecran
     }
 
     public ResourceWallet bluePlayer;
@@ -26,6 +26,28 @@ public class PlayerResourceManager : MonoBehaviour
             case HexData.ResourceType.Ore: wallet.ore += amount; break;
         }
 
-        Debug.Log($"Jucătorul {player} a primit {amount} {type}. Scor nou: W:{wallet.wood} B:{wallet.brick}");
+        UpdateUI(wallet); // Actualizăm textul de pe ecran
+        Debug.Log($"Jucătorul {player} a primit {amount} {type}.");
+    }
+
+    private void UpdateUI(ResourceWallet wallet)
+    {
+        // 1. Verificăm dacă am tras un obiect în căsuță
+        if (wallet.uiDisplayObject != null)
+        {
+            // 2. Încercăm să accesăm componenta de TextMeshPro de pe acel GameObject
+            TextMeshPro textComponent = wallet.uiDisplayObject.GetComponent<TextMeshPro>();
+
+            // 3. Dacă am găsit componenta, îi modificăm textul
+            if (textComponent != null)
+            {
+                textComponent.text = $"Lemn: {wallet.wood} | Argilă: {wallet.brick}\n" +
+                                     $"Lână: {wallet.sheep} | Grâu: {wallet.wheat} | Minereu: {wallet.ore}";
+            }
+            else
+            {
+                Debug.LogError($"Obiectul {wallet.uiDisplayObject.name} nu are o componentă TextMeshProUGUI pe el!");
+            }
+        }
     }
 }

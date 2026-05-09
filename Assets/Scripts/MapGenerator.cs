@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using static HexData;
+using static UnityEditor.PlayerSettings;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -115,6 +116,14 @@ public class MapGenerator : MonoBehaviour
 
         if (safetyBreak >= 100) Debug.LogWarning("Nu s-a putut genera o hartă validă după 100 încercări.");
 
+        HexData[] allHexes = FindObjectsOfType<HexData>();
+
+        // 4. APELUL CORECT:
+        foreach (HexData hex in allHexes)
+        {
+            // Trimitem atât obiectul (hex.gameObject) cât și poziția lui (hex.transform.position)
+            PopulateHexCorners(hex.gameObject, hex.transform.position);
+        }
         InitializeHarbors();
         SetupInitialRobber();
     }
@@ -194,22 +203,28 @@ public class MapGenerator : MonoBehaviour
 
     private void CreateHex(int q, int r, HexData.ResourceType type, int number)
     {
+        // 1. Calculăm poziția normală (X, Y)
         Vector3 worldPosition = HexCoordinates.AxialToWorld(q, r, hexRadius);
         worldPosition += transform.position;
 
+        // 2. MODIFICARE: Forțăm Z-ul la 1 înainte de instanțiere
+        // Asta îl trimite "în spate", deci colțurile de la Z=0 vor fi "peste" el
+        worldPosition.z = 1f;
+
+        // 3. Instanțiem cu noul worldPosition care are Z=1
         GameObject hexGo = Instantiate(hexPrefab, worldPosition, Quaternion.identity);
         hexGo.transform.SetParent(this.transform);
 
         HexData data = hexGo.GetComponent<HexData>();
         if (data != null) data.Initialize(q, r, type, number);
 
-        // Ordinea corectă: întâi colțurile, apoi drumurile
-        List<GameObject> corners = CreateCornersForHex(worldPosition);
+        // 4. Atenție: Când creăm colțurile, le trimitem poziția originală (X, Y) 
+        // sau ne asigurăm că în CreateCornersForHex ele primesc Z = 0 sau Z = -1
+        List<GameObject> corners = CreateCornersForHex(new Vector3(worldPosition.x, worldPosition.y, 0f));
         CreateEdges(corners);
 
         generatedHexes.Add(hexGo);
     }
-
     private void ClearMap()
     {
         // Când jocul rulează, folosim Destroy. Când suntem în editor (ContextMenu), folosim DestroyImmediate.
@@ -248,7 +263,7 @@ public class MapGenerator : MonoBehaviour
 
         for (int i = 0; i < 6; i++)
         {
-            float angle_deg = 60 * i + 30;
+            float angle_deg = 60 * i + 30f;
             float angle_rad = Mathf.PI / 180 * angle_deg;
 
             Vector3 cornerPos = new Vector3(
@@ -258,9 +273,10 @@ public class MapGenerator : MonoBehaviour
             );
 
             Vector3 roundedPos = new Vector3(
-            Mathf.Round(cornerPos.x * 10f) / 10f,
-            Mathf.Round(cornerPos.y * 10f) / 10f,
-            -1f);
+            Mathf.Round(cornerPos.x * 100f) / 100f,
+            Mathf.Round(cornerPos.y * 100f) / 100f,
+            0f
+        );
 
             GameObject cornerObj;
 
@@ -528,7 +544,7 @@ public class MapGenerator : MonoBehaviour
         // Folosește aceeași logică/matematică pe care ai folosit-o la crearea colțurilor
         for (int i = 0; i < 6; i++)
         {
-            float angle_deg = 60 * i; // Poate fi 60 * i + 30 depinde de orientarea hex-ului tău
+            float angle_deg = 60 * i + 30; // Poate fi 60 * i + 30 depinde de orientarea hex-ului tău
             float angle_rad = Mathf.Deg2Rad * angle_deg;
 
             // Dimensiunea hexagonului (size-ul pe care îl folosești deja)
@@ -551,12 +567,17 @@ public class MapGenerator : MonoBehaviour
             if (uniqueCorners.ContainsKey(roundedPos))
             {
                 HexCorner cornerScript = uniqueCorners[roundedPos].GetComponent<HexCorner>();
+                Debug.Log($"Hexagonul de la {hexPos} a găsit colțul la {roundedPos}");
 
                 // Adăugăm referința în lista hexagonului
                 if (!hexData.adjacentCorners.Contains(cornerScript))
                 {
                     hexData.adjacentCorners.Add(cornerScript);
                 }
+            }
+            else
+            {
+                Debug.LogWarning($"Hexagonul de la {hexPos} NU a găsit colț la poziția calculată: {roundedPos}");
             }
         }
     }
