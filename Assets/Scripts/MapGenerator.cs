@@ -513,7 +513,40 @@ public class MapGenerator : MonoBehaviour
         // 4. Ieșim din faza de mutare
         isMovingRobber = false;
         Debug.Log("Hoțul a fost mutat!");
+        HandleRobberStealing(targetHex);
     }
+
+    private void HandleRobberStealing(HexData hex)
+    {
+        GameManager gm = FindObjectOfType<GameManager>();
+        PlayerResourceManager resManager = FindObjectOfType<PlayerResourceManager>();
+
+        Player attacker = gm.currentPlayer;
+        Player victim = (attacker == Player.Blue) ? Player.Orange : Player.Blue;
+
+        bool victimFound = false;
+
+        // Verificăm dacă victima are vreo casă pe colțurile acestui hexagon
+        foreach (HexCorner corner in hex.adjacentCorners)
+        {
+            if (corner.isOccupied && corner.owner == victim)
+            {
+                victimFound = true;
+                break;
+            }
+        }
+
+        if (victimFound)
+        {
+            // Apelăm o metodă în ResourceManager care să execute furtul
+            resManager.StealResource(victim, attacker);
+        }
+        else
+        {
+            Debug.Log("Nu e nimeni de la culoarea opusă pe acest hexagon. Nimic de furat.");
+        }
+    }
+
     public void DistributeResources(int diceRoll)
     {
         // Căutăm toate hexagoanele

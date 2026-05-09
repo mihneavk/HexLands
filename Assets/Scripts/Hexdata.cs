@@ -38,6 +38,18 @@ public class HexData : MonoBehaviour
     }
     public ResourceVisual[] visualLibrary;
 
+    private void OnMouseDown()
+    {
+        GameManager gm = FindObjectOfType<GameManager>();
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+
+        // Verificăm dacă suntem în faza în care trebuie să mutăm hoțul
+        if (mg.isMovingRobber)
+        {
+            mg.MoveRobberToHex(this);
+        }
+    }
+
     public int Q { get; private set; }
     public int R { get; private set; }
 

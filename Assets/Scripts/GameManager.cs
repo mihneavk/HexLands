@@ -157,11 +157,18 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+
+        if (mg.isMovingRobber)
+        {
+            Debug.LogWarning("Legea deșertului: Nu poți încheia tura până nu muți hoțul!");
+            return;
+        }
+
         // 1. Schimbăm jucătorul și resetăm stările interne
         currentPlayer = (currentPlayer == MapGenerator.Player.Blue) ?
                          MapGenerator.Player.Orange : MapGenerator.Player.Blue;
 
-        MapGenerator mg = FindObjectOfType<MapGenerator>();
         mg.PrepareNextPlayer(); // Aceasta resetează zarul și apelează UpdateValidCorners modificat mai sus
 
         // 2. Resetăm modul de construcție
