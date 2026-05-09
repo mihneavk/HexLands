@@ -2,8 +2,19 @@
 using System.Collections.Generic;
 using static UnityEngine.EventSystems.EventTrigger;
 
+
+
 public class GameManager : MonoBehaviour
 {
+    [Header("Punctaj")]
+    public int bluePoints = 0;
+    public int orangePoints = 0;
+    public int pointsToWin = 10;
+
+    // Referințe către textele din UI (le vei trage din Inspector)
+    public TMPro.TextMeshProUGUI bluePointsText;
+    public TMPro.TextMeshProUGUI orangePointsText;
+
     public enum GamePhase { Setup, Gameplay }
     public GamePhase currentPhase = GamePhase.Setup;
     public bool hasRolled = false;
@@ -28,6 +39,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         // Începem cu primul din listă (Albastru)
+        UpdatePointsUI();
         hasRolled = true;
         currentPlayer = setupOrder[0];
         diceController.canRoll = false;
@@ -38,6 +50,7 @@ public class GameManager : MonoBehaviour
 
     public void OnSettlementPlaced(HexCorner corner)
     {
+        AddVictoryPoint(corner.owner, 1);
         if (currentPhase == GamePhase.Setup)
         {
             if (setupStep == 2 || setupStep == 3) // Ordinea 0,1,2,3 -> pasul 2 și 3 sunt resursele
@@ -186,6 +199,40 @@ public class GameManager : MonoBehaviour
         //buildUIManager.RefreshButtons();
 
         Debug.Log($"Tura s-a încheiat. Acum este rândul lui: {currentPlayer}");
+    }
+
+    public void AddVictoryPoint(MapGenerator.Player player, int amount = 1)
+    {
+        if (player == MapGenerator.Player.Blue)
+        {
+            bluePoints += amount;
+        }
+        else if (player == MapGenerator.Player.Orange)
+        {
+            orangePoints += amount;
+        }
+
+        UpdatePointsUI();
+        CheckForWin(player);
+    }
+
+    private void UpdatePointsUI()
+    {
+        if (bluePointsText != null) bluePointsText.text = $"Puncte: {bluePoints}";
+        if (orangePointsText != null) orangePointsText.text = $"Puncte: {orangePoints}";
+    }
+
+    private void CheckForWin(MapGenerator.Player player)
+    {
+        int currentPoints = (player == MapGenerator.Player.Blue) ? bluePoints : orangePoints;
+
+        if (currentPoints >= pointsToWin)
+        {
+            Debug.Log($"<color=green>JUCĂTORUL {player} A CÂȘTIGAT JOCUL!</color>");
+            // Aici poți adăuga logică pentru un ecran de final, oprirea zarurilor etc.
+            currentPhase = GamePhase.Setup; // Un truc simplu ca să blochezi jocul
+            FindObjectOfType<DiceController>().canRoll = false;
+        }
     }
 
 }

@@ -121,10 +121,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9771134f71e06db4ab80b82dc80af943, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  bluePoints: 0
+  orangePoints: 0
+  pointsToWin: 10
+  bluePointsText: {fileID: 0}
+  orangePointsText: {fileID: 0}
   currentPhase: 0
+  hasRolled: 0
   currentPlayer: 0
   diceController: {fileID: 0}
-  buildUIManager: {fileID: 0}
+  buildUIManager: {fileID: 6386917633498597883}
+  lastPlacedSettlement: {fileID: 0}
 --- !u!114 &6386917633498597883
 MonoBehaviour:
   m_ObjectHideFlags: 0
