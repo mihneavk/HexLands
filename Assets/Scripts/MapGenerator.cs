@@ -564,7 +564,7 @@ public class MapGenerator : MonoBehaviour
                     {
                         // 3. Dăm resursa proprietarului colțului
                         int amount = corner.isCity ? 2 : 1;
-                        FindObjectOfType<PlayerResourceManager>().AddResource(corner.owner, hex.resourceType, 1);
+                        FindObjectOfType<PlayerResourceManager>().AddResource(corner.owner, hex.resourceType, amount);
                     }
                 }
             }

@@ -5,7 +5,7 @@ public class SettlementPlacer : MonoBehaviour
     public GameObject settlementPrefab;
 
     // Stări pentru a ști ce vrea jucătorul să construiască
-    public enum BuildMode { None, PlacingSettlement, PlacingRoad, , PlacingCity }
+    public enum BuildMode { None, PlacingSettlement, PlacingRoad, PlacingCity }
     public BuildMode currentMode = BuildMode.None;
 
     public void ActivateCityMode()
@@ -90,7 +90,6 @@ public class SettlementPlacer : MonoBehaviour
             else if (hit.collider.CompareTag("Corner") && currentMode == BuildMode.PlacingCity)
             {
                 HexCorner corner = hit.collider.GetComponent<HexCorner>();
-                GameManager gm = FindObjectOfType<GameManager>();
 
                 // REGULĂ: Trebuie să fie casa TA și să NU fie deja oraș
                 if (corner.isOccupied && corner.owner == gm.currentPlayer && !corner.isCity)
@@ -225,9 +224,36 @@ public class SettlementPlacer : MonoBehaviour
     private void InstantiateHouse(HexCorner corner, GameManager gm)
     {
         GameObject newSettlement = Instantiate(settlementPrefab, corner.transform.position, Quaternion.identity);
+        corner.visualHouseObject = newSettlement;
         newSettlement.GetComponent<SpriteRenderer>().sprite = FindObjectOfType<MapGenerator>().GetCurrentHouseSprite();
         corner.BuildSettlement(gm.currentPlayer);
         gm.OnSettlementPlaced(corner);
+    }
+
+    private bool CanBuildNow()
+    {
+        GameManager gm = FindObjectOfType<GameManager>();
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+
+        // 1. În faza de Setup, lăsăm jucătorul să construiască mereu (fără zar)
+        if (gm.currentPhase == GameManager.GamePhase.Setup)
+            return true;
+
+        // 2. În faza de Gameplay, verificăm condițiile:
+        // Trebuie să fi dat cu zarul ȘI să nu fie în mijlocul mutării hoțului
+        if (!gm.hasRolled)
+        {
+            Debug.Log("Trebuie să dai cu zarul mai întâi!");
+            return false;
+        }
+
+        if (mg.isMovingRobber)
+        {
+            Debug.Log("Mută hoțul înainte de a construi!");
+            return false;
+        }
+
+        return true; // Dacă a trecut de toate, poate construi!
     }
 
 

@@ -9,6 +9,8 @@ public class HexCorner : MonoBehaviour
     public List<HexEdge> adjacentEdges = new List<HexEdge>();
     public MapGenerator.Player owner = MapGenerator.Player.None; // Salvăm cine a pus casa
 
+    public GameObject visualHouseObject;
+
     // În HexCorner.cs
 
     public void BuildSettlement(MapGenerator.Player player)
@@ -107,12 +109,23 @@ public class HexCorner : MonoBehaviour
     {
         isCity = true;
         MapGenerator mg = FindObjectOfType<MapGenerator>();
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
 
-        if (sr != null)
+        if (visualHouseObject != null)
         {
-            sr.sprite = mg.GetCurrentCitySprite();
+            SpriteRenderer sr = visualHouseObject.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                Debug.LogWarning("Cum trebuia");
+                sr.sprite = mg.GetCurrentCitySprite();
+            }
         }
+        else
+        {
+            Debug.LogWarning("Am facut fallback");
+            // Fallback: dacă nu avem obiect separat, încercăm pe cel actual
+            GetComponent<SpriteRenderer>().sprite = mg.GetCurrentCitySprite();
+        }
+        GetComponent<SpriteRenderer>().enabled = false;
         Debug.Log($"Settlement-ul de la {gameObject.name} a devenit ORAȘ!");
     }
 }

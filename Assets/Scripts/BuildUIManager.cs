@@ -6,6 +6,7 @@ public class BuildUIManager : MonoBehaviour
     [Header("Butoane UI")]
     public Button buildSettlementBtn;
     public Button buildRoadBtn;
+    public Button buildCityBtn;
 
     [Header("Referințe")]
     public PlayerResourceManager resourceManager;
@@ -20,12 +21,14 @@ public class BuildUIManager : MonoBehaviour
         {
             buildSettlementBtn.gameObject.SetActive(false);
             buildRoadBtn.gameObject.SetActive(false);
+            buildCityBtn.gameObject.SetActive(false);
             return;
         }
 
         // Activăm butoanele și le facem vizibile
         buildSettlementBtn.gameObject.SetActive(true);
         buildRoadBtn.gameObject.SetActive(true);
+        buildCityBtn.gameObject.SetActive(true);
 
         MapGenerator.Player currentPlayer = gameManager.currentPlayer;
 
@@ -52,10 +55,26 @@ public class BuildUIManager : MonoBehaviour
             buildRoadBtn.interactable = false;
             buildRoadBtn.image.color = new Color(1f, 1f, 1f, 0.85f); // Transparent
         }
+
+        if(resourceManager.CanAffordCity(currentPlayer))
+        {
+            buildCityBtn.interactable = true;
+            buildCityBtn.image.color = Color.white;
+        }
+        else
+        {
+            buildCityBtn.interactable = false;  
+            buildCityBtn.image.color = new Color(1f, 1f, 1f, 0.85f);
+        }
     }
 
     private void Update()
     {
         RefreshButtons();
+    }
+
+    private void Start()
+    {
+        //buildCityBtn.gameObject.SetActive(false);
     }
 }

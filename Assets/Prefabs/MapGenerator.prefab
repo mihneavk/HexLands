@@ -44,16 +44,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7f2066301f54dc4b8df34d51a6b4ec5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentPlayer: 0
   blueHouse: {fileID: 21300000, guid: f047df6c460ad2348a76eb916f52c2d7, type: 3}
   orangeHouse: {fileID: 21300000, guid: 9ef56111f654fd94b8a1ede22238c8e3, type: 3}
   blueRoad: {fileID: 21300000, guid: 39d87b59196aaf848a9d467dd8e23c93, type: 3}
   orangeRoad: {fileID: 21300000, guid: e7dab924170878f46b283f31e2927575, type: 3}
+  allHexes: []
+  allCorners: []
+  allEdges: []
   turnCounter: 1
   hexPrefab: {fileID: 1703847731369361085, guid: 94ad45cb0f1e6624999730f7365a036e, type: 3}
   hexRadius: 1
   mapRadius: 2
-  cornerPrefab: {fileID: 0}
-  edgePrefab: {fileID: 0}
+  cornerPrefab: {fileID: 1845207136235413333, guid: b70ec9831bf569548ae371133af937fc, type: 3}
+  edgePrefab: {fileID: 4604120335458903203, guid: 429e43b48e3b2d347b77fac3073d0b88, type: 3}
   robberPrefab: {fileID: 2620508155385330674, guid: 195669afc57b1b04f83a13d82ad073de, type: 3}
   isMovingRobber: 0
+  blueCity: {fileID: 2142591020881103527, guid: e3a7978ec7be0154395a9c976aef97f3, type: 3}
+  orangeCity: {fileID: -1511211227716147539, guid: 3381f2af95cf81a49a4e05b29c400f24, type: 3}
