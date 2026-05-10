@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 9006452256705704288}
   - component: {fileID: 7314200592303588240}
   - component: {fileID: 6386917633498597883}
+  - component: {fileID: 6678266985984728280}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -132,6 +133,8 @@ MonoBehaviour:
   diceController: {fileID: 0}
   buildUIManager: {fileID: 6386917633498597883}
   lastPlacedSettlement: {fileID: 0}
+  blueHasLongestRoadBonus: 0
+  orangeHasLongestRoadBonus: 0
 --- !u!114 &6386917633498597883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -146,5 +149,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildUIManager
   buildSettlementBtn: {fileID: 0}
   buildRoadBtn: {fileID: 0}
+  buildCityBtn: {fileID: 0}
   resourceManager: {fileID: 0}
   gameManager: {fileID: 7314200592303588240}
+--- !u!114 &6678266985984728280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4525268407689724480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23ffbc69f70981045acb611d195b8556, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BankTradeManager
+  giveDropdown: {fileID: 0}
+  giveAmountInput: {fileID: 0}
+  receiveDropdown: {fileID: 0}
+  receiveAmountInput: {fileID: 0}
+  rateInfoText: {fileID: 0}
