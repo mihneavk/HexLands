@@ -151,4 +151,17 @@ public class PlayerResourceManager : MonoBehaviour
         UpdateUI(wallet);
         if (buildUIManager != null) buildUIManager.RefreshButtons();
     }
+
+    public bool CanAffordCity(MapGenerator.Player player)
+    {
+        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        return wallet.ore >= 3 && wallet.wheat >= 2;
+    }
+
+    public void SpendForCity(MapGenerator.Player player)
+    {
+        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        wallet.ore -= 3; wallet.wheat -= 2;
+        UpdateUI(wallet);
+    }
 }

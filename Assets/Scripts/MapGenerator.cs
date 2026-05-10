@@ -563,6 +563,7 @@ public class MapGenerator : MonoBehaviour
                     if (corner.isOccupied)
                     {
                         // 3. Dăm resursa proprietarului colțului
+                        int amount = corner.isCity ? 2 : 1;
                         FindObjectOfType<PlayerResourceManager>().AddResource(corner.owner, hex.resourceType, 1);
                     }
                 }
@@ -663,5 +664,15 @@ public class MapGenerator : MonoBehaviour
         }
 
         return 1 + maxSubPath;
+    }
+
+    [Header("Sprite-uri Orașe")]
+    public Sprite blueCity;
+    public Sprite orangeCity;
+
+    public Sprite GetCurrentCitySprite()
+    {
+        GameManager gm = FindObjectOfType<GameManager>();
+        return gm.currentPlayer == Player.Blue ? blueCity : orangeCity;
     }
 }

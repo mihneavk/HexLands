@@ -5,8 +5,15 @@ public class SettlementPlacer : MonoBehaviour
     public GameObject settlementPrefab;
 
     // Stări pentru a ști ce vrea jucătorul să construiască
-    public enum BuildMode { None, PlacingSettlement, PlacingRoad }
+    public enum BuildMode { None, PlacingSettlement, PlacingRoad, , PlacingCity }
     public BuildMode currentMode = BuildMode.None;
+
+    public void ActivateCityMode()
+    {
+        if (!CanBuildNow()) return; // Verifică hasRolled
+        currentMode = BuildMode.PlacingCity;
+        SetVisualsVisibility();
+    }
 
     public void ActivateSettlementMode() {
         GameManager gm = FindObjectOfType<GameManager>();
@@ -77,6 +84,24 @@ public class SettlementPlacer : MonoBehaviour
                         SetVisualsVisibility();
                         // RefreshButtons() este apelat deja în BuildRoad
                     }
+                }
+            }
+
+            else if (hit.collider.CompareTag("Corner") && currentMode == BuildMode.PlacingCity)
+            {
+                HexCorner corner = hit.collider.GetComponent<HexCorner>();
+                GameManager gm = FindObjectOfType<GameManager>();
+
+                // REGULĂ: Trebuie să fie casa TA și să NU fie deja oraș
+                if (corner.isOccupied && corner.owner == gm.currentPlayer && !corner.isCity)
+                {
+                    corner.UpgradeToCity();
+                    FindObjectOfType<PlayerResourceManager>().SpendForCity(gm.currentPlayer);
+                    gm.AddVictoryPoint(gm.currentPlayer, 1); // Orașul valorează 2 puncte (casa avea deja 1)
+
+                    currentMode = BuildMode.None;
+                    SetVisualsVisibility();
+                    FindObjectOfType<BuildUIManager>().RefreshButtons();
                 }
             }
         }

@@ -100,4 +100,19 @@ public class HexCorner : MonoBehaviour
 
         return false; // Nu am găsit niciun drum conectat
     }
+
+    public bool isCity = false;
+
+    public void UpgradeToCity()
+    {
+        isCity = true;
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+
+        if (sr != null)
+        {
+            sr.sprite = mg.GetCurrentCitySprite();
+        }
+        Debug.Log($"Settlement-ul de la {gameObject.name} a devenit ORAȘ!");
+    }
 }
