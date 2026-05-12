@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2593938219419762874
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2235541927065445798}
+  - component: {fileID: 1491437895633187361}
+  m_Layer: 0
+  m_Name: DevCardManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2235541927065445798
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2593938219419762874}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.7448, y: 4.61421, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1491437895633187361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2593938219419762874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2e027f109c32764784bca4cd39f5e77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DevCardManager
+  knightSprite: {fileID: -1583225379451314367, guid: 94195ddfae9277b44a311c989b1c6c26, type: 3}
+  roadBuildingSprite: {fileID: 2295564888014189243, guid: d0760fb251c7cac4ab7365b235ca6698, type: 3}
+  yearOfPlentySprite: {fileID: -7056967764340408148, guid: 9bde5c5dd886b394b8f9085dcdc6c05f, type: 3}
+  monopolySprite: {fileID: 2824633018738118201, guid: 91233290d6ae1f346ac9af9effdac82c, type: 3}
+  victoryPointSprite: {fileID: -2270690809454997538, guid: d9837c74c56a97f4db86579486834035, type: 3}
+  devCardPrefab: {fileID: 7668516109538929748, guid: c5114307445406a43b7dfe8fdd8d5141, type: 3}
+  cardSpacing: 0.075
+  startOffsetX: -0.4

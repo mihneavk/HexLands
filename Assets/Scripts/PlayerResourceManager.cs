@@ -8,7 +8,9 @@ public class PlayerResourceManager : MonoBehaviour
     public class ResourceWallet
     {
         public int wood, brick, sheep, wheat, ore;
+        public List<DevCardManager.DevCardType> devCards = new List<DevCardManager.DevCardType>(); // Listă cu cărțile deținute
         public GameObject uiDisplayObject; // Referință către textul de pe ecran
+        public Transform devCardContainer;
     }
 
     public ResourceWallet bluePlayer;

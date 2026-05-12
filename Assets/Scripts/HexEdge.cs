@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.VisualScripting.Antlr3.Runtime.Tree;
+using UnityEngine;
 
 public class HexEdge : MonoBehaviour
 {
@@ -23,13 +24,58 @@ public class HexEdge : MonoBehaviour
 
     private void OnMouseDown()
     {
-        // Verificăm dacă cercul de preview este activ (adică drumul e disponibil pentru construcție)
         if (previewCircle.activeSelf && !isOccupied)
         {
-            BuildRoad();
+            SettlementPlacer placer = FindObjectOfType<SettlementPlacer>();
+            GameManager gm = FindObjectOfType<GameManager>();
 
-            // Anunțăm MapGenerator să ascundă restul variantelor
-            FindObjectOfType<MapGenerator>().FinishRoadPlacement();
+            if (placer != null && placer.roadsRemainingFromCard > 0)
+            {
+                Debug.LogWarning("HexEdge: Construiesc drum GRATIS din OnMouseDown");
+                BuildRoad(true);
+                placer.roadsRemainingFromCard--;
+
+                if (placer.roadsRemainingFromCard == 0)
+                {
+                    // S-au terminat drumurile de la carte
+                    placer.SetVisualsVisibility();
+                    gm.OnRoadFinished();
+
+                    // ABIA ACUM închidem tot procesul vizual de pe hartă
+                    FindObjectOfType<MapGenerator>().FinishRoadPlacement();
+                }
+                else
+                {
+                    Debug.Log("HexEdge: Mai ai un drum de pus. Refresh la vizualuri.");
+
+                    // Rămânem în build mode
+                    placer.currentMode = SettlementPlacer.BuildMode.PlacingRoad;
+
+                    // RECALCULĂM punctele unde se pot pune drumuri. 
+                    // Important: acum se va activa și preview-ul de lângă drumul tocmai pus!
+                    placer.SetVisualsVisibility();
+
+                    // NU chemăm FinishRoadPlacement aici, pentru că vrem să vedem cercurile în continuare
+                }
+            }
+            else
+            {
+                // CAZ NORMAL (sau Setup)
+                Debug.LogWarning("HexEdge: Construiesc drum NORMAL");
+                BuildRoad(false);
+
+                if (placer != null)
+                {
+                    // Nu resetăm currentMode (pentru flow-ul tău de Setup)
+                    placer.SetVisualsVisibility();
+                }
+
+                // Aici probabil vrei să închizi vizualul dacă nu mai ești în Setup
+                if (gm.currentPhase != GameManager.GamePhase.Setup)
+                {
+                    FindObjectOfType<MapGenerator>().FinishRoadPlacement();
+                }
+            }
         }
     }
 
@@ -95,9 +141,17 @@ public class HexEdge : MonoBehaviour
 
     // În HexEdge.cs
 
-    public void BuildRoad()
+    public void BuildRoad(bool isFree = false)
     {
         Debug.LogWarning("AM DAT BUILD LA ROAD");
+        if(isFree)
+        {
+            Debug.LogWarning("DA, ESTE MOCA");
+        }
+        else
+        {
+            Debug.LogWarning("NU A MERS CUM TREBUIE");
+        }
         isOccupied = true;
         MapGenerator mg = FindObjectOfType<MapGenerator>();
         GameManager gm = FindObjectOfType<GameManager>();
@@ -119,19 +173,20 @@ public class HexEdge : MonoBehaviour
         if (GetComponent<Collider2D>() != null)
             GetComponent<Collider2D>().enabled = false;
 
-        if (gm.currentPhase != GameManager.GamePhase.Setup)
+        if (gm.currentPhase != GameManager.GamePhase.Setup && !isFree)
         {
-            // Consumăm resursele (1 Wood, 1 Brick)
             resManager.SpendForRoad(gm.currentPlayer);
-
-            // Actualizăm butoanele din UI (pentru a se dezactiva dacă nu mai avem resurse)
             FindObjectOfType<BuildUIManager>().RefreshButtons();
         }
 
         gm.CheckLongestRoad(this.owner);
 
-        // 3. ANUNȚĂM managerul să treacă la următorul jucător
-        gm.OnRoadFinished();
+        // Atenție: Dacă e Road Building, s-ar putea să nu vrei să apelezi OnRoadFinished imediat
+        // deoarece jucătorul mai are un drum de pus în aceeași "construcție".
+        if (!isFree)
+        {
+            gm.OnRoadFinished();
+        }
 
         // 4. (Opțional) Șterge mg.PrepareNextPlayer() de aici dacă GameManager se ocupă de rânduri
     }

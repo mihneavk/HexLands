@@ -8,6 +8,17 @@ public class SettlementPlacer : MonoBehaviour
     public enum BuildMode { None, PlacingSettlement, PlacingRoad, PlacingCity }
     public BuildMode currentMode = BuildMode.None;
 
+    [Header("Road Building Logic")]
+    public int roadsRemainingFromCard = 0; // Câte drumuri gratis mai avem
+
+    public void ActivateRoadBuildingCard()
+    {
+        roadsRemainingFromCard = 2;
+        currentMode = BuildMode.PlacingRoad; // Intram în modul de plasare drum
+        SetVisualsVisibility(); // Activăm punctele de drum (muchiile)
+        Debug.Log($"[SettlementPlacer] CARTE ACTIVATĂ pe instanța: {gameObject.name} | ID: {gameObject.GetInstanceID()}, ROADBUILDING");
+    }
+
     public void ActivateCityMode()
     {
         if (!CanBuildNow()) return; // Verifică hasRolled
@@ -40,6 +51,7 @@ public class SettlementPlacer : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
+            Debug.Log($"[SettlementPlacer] Click detectat pe instanța: {gameObject.name} | ID: {gameObject.GetInstanceID()} | Roads: {roadsRemainingFromCard}");
             GameManager gm = FindObjectOfType<GameManager>();
             PlayerResourceManager resManager = FindObjectOfType<PlayerResourceManager>();
             bool isSetup = (gm.currentPhase == GameManager.GamePhase.Setup);
@@ -73,16 +85,44 @@ public class SettlementPlacer : MonoBehaviour
             else if (hit.collider.CompareTag("Edge") && (isSetup || currentMode == BuildMode.PlacingRoad))
             {
                 HexEdge edge = hit.collider.GetComponent<HexEdge>();
+                Debug.Log("AM LOVIT EDGE");
                 if (!edge.isOccupied)
                 {
-                    // BuildRoad() se ocupă acum de tot: owner, vizual și PLATĂ
-                    edge.BuildRoad();
-
-                    if (!isSetup)
+                    // CAZUL 1: Folosim cardul Road Building
+                    if (roadsRemainingFromCard > 0)
                     {
-                        currentMode = BuildMode.None;
-                        SetVisualsVisibility();
-                        // RefreshButtons() este apelat deja în BuildRoad
+                        Debug.LogWarning("Suntem Pe ramura buna");
+                        edge.BuildRoad(true); // Îi spunem că e GRATIS
+                        roadsRemainingFromCard--;
+
+                        if (roadsRemainingFromCard > 0)
+                        {
+                            // Mai are un drum de pus! Rămânem în acest mod.
+                            Debug.Log("Mai ai un drum gratis de pus.");
+                            currentMode = BuildMode.PlacingRoad;
+                        }
+                        else
+                        {
+                            // S-au terminat ambele drumuri de la carte
+                            Debug.LogWarning("Intru pe ramura de PLATA pentru ca roadsRemainingFromCard este: " + roadsRemainingFromCard);
+                            currentMode = BuildMode.None;
+                            SetVisualsVisibility();
+                            // Abia acum anunțăm GameManager că am terminat tura de construcție
+                            gm.OnRoadFinished();
+                        }
+                        // Dacă roadsRemainingFromCard este încă 1, rămânem în PlacingRoad
+                    }
+                    // CAZUL 2: Construcție normală sau Setup
+                    else
+                    {
+                        Debug.LogWarning("NU Suntem Pe ramura buna");
+                        edge.BuildRoad(false); // Costă resurse (sau e Setup)
+
+                        if (!isSetup)
+                        {
+                            currentMode = BuildMode.None;
+                            SetVisualsVisibility();
+                        }
                     }
                 }
             }
