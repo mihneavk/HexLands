@@ -53,4 +53,14 @@ public class PlayerInventory : MonoBehaviour
         if (wheatText != null) wheatText.text = resources[HexData.ResourceType.Wheat].ToString();
         if (oreText != null) oreText.text = resources[HexData.ResourceType.Ore].ToString();
     }
+
+    // Funcție nouă pentru ca Advisor-ul să poată citi resursele
+    public int GetResourceCount(HexData.ResourceType type)
+    {
+        if (resources != null && resources.ContainsKey(type))
+        {
+            return resources[type];
+        }
+        return 0;
+    }
 }
