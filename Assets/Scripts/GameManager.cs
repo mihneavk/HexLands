@@ -12,12 +12,12 @@ public class GameManager : MonoBehaviour
     public TMPro.TextMeshProUGUI bluePointsText;
     public TMPro.TextMeshProUGUI orangePointsText;
 
-    // SCUTUL PENTRU BUTOANE (Opțional, vezi pașii de mai jos)
     public GameObject aiBlockerShield;
 
     public enum GamePhase { Setup, Gameplay }
     public GamePhase currentPhase = GamePhase.Setup;
     public bool hasRolled = false;
+    private bool gameEnded = false; // Variabilă nouă pentru victorie
 
     public MapGenerator.Player currentPlayer;
 
@@ -86,13 +86,13 @@ public class GameManager : MonoBehaviour
             currentPlayer = setupOrder[setupStep];
             if (currentPlayer == MapGenerator.Player.Orange)
             {
-                EnablePlayerControls(false); // Oprim mouse-ul omului
+                EnablePlayerControls(false);
                 AIOpponent ai = FindObjectOfType<AIOpponent>();
                 if (ai != null) ai.StartAITurn();
             }
             else
             {
-                EnablePlayerControls(true); // Repornim mouse-ul omului
+                EnablePlayerControls(true);
                 SettlementPlacer[] placers = FindObjectsOfType<SettlementPlacer>();
                 foreach (SettlementPlacer sp in placers) sp.ActivateSettlementMode();
             }
@@ -184,31 +184,21 @@ public class GameManager : MonoBehaviour
 
         if (currentPlayer == MapGenerator.Player.Orange)
         {
-            EnablePlayerControls(false); // Oprim mouse-ul tău
+            EnablePlayerControls(false);
             AIOpponent ai = FindObjectOfType<AIOpponent>();
             if (ai != null) ai.StartAITurn();
         }
         else
         {
-            EnablePlayerControls(true); // Repornim mouse-ul tău
+            EnablePlayerControls(true);
         }
     }
 
-    // Funcția supremă care închide tot click-ul tău
     private void EnablePlayerControls(bool enable)
     {
-        // 1. Oprește click-urile pe hartă
         SettlementPlacer[] placers = FindObjectsOfType<SettlementPlacer>();
-        foreach (SettlementPlacer sp in placers)
-        {
-            sp.enabled = enable;
-        }
-
-        // 2. Pornește scutul care blochează butoanele de UI (Zar, Dezvoltare, Trade)
-        if (aiBlockerShield != null)
-        {
-            aiBlockerShield.SetActive(!enable);
-        }
+        foreach (SettlementPlacer sp in placers) sp.enabled = enable;
+        if (aiBlockerShield != null) aiBlockerShield.SetActive(!enable);
     }
 
     public void AddVictoryPoint(MapGenerator.Player player, int amount = 1)
@@ -231,9 +221,11 @@ public class GameManager : MonoBehaviour
         int currentPoints = (player == MapGenerator.Player.Blue) ? bluePoints : orangePoints;
         if (currentPoints >= pointsToWin)
         {
+            gameEnded = true; // Jocul s-a terminat
             UnityEngine.Debug.Log($"<color=green>JUCĂTORUL {player} A CÂȘTIGAT JOCUL!</color>");
             currentPhase = GamePhase.Setup;
             if (diceController != null) diceController.canRoll = false;
+            EnablePlayerControls(false);
         }
     }
 
@@ -267,28 +259,38 @@ public class GameManager : MonoBehaviour
         catch (System.Exception ex) { }
     }
 
-    // ==========================================
-    // UI DIN COD PENTRU TROFEE (Fără a fi nevoie de Canvas)
-    // ==========================================
     private void OnGUI()
     {
         GUIStyle style = new GUIStyle(GUI.skin.box);
         style.fontSize = 16;
         style.fontStyle = FontStyle.Bold;
-
-        // Am centrat și textul din interiorul cutiei ca să arate mai bine
         style.alignment = TextAnchor.MiddleCenter;
         style.normal.textColor = Color.white;
 
-        string roadText = "🏆 Cel mai lung drum: Nimeni";
-        if (blueHasLongestRoadBonus) roadText = "🏆 Cel mai lung drum: Albastru";
-        else if (orangeHasLongestRoadBonus) roadText = "🏆 Cel mai lung drum: Portocaliu";
+        string roadText = blueHasLongestRoadBonus ? "🏆 Cel mai lung drum: Albastru" : (orangeHasLongestRoadBonus ? "🏆 Cel mai lung drum: Portocaliu" : "🏆 Cel mai lung drum: Nimeni");
+        string armyText = blueHasLargestArmyBonus ? "⚔️ Cea mai mare armată: Albastru" : (orangeHasLargestArmyBonus ? "⚔️ Cea mai mare armată: Portocaliu" : "⚔️ Cea mai mare armată: Nimeni");
 
-        string armyText = "⚔️ Cea mai mare armată: Nimeni";
-        if (blueHasLargestArmyBonus) armyText = "⚔️ Cea mai mare armată: Albastru";
-        else if (orangeHasLargestArmyBonus) armyText = "⚔️ Cea mai mare armată: Portocaliu";
-
-        // Mutăm cutia pe mijloc: X = (Screen.width / 2) - 160, Y = 10 (rămâne sus de tot)
         GUI.Box(new Rect((Screen.width / 2) - 160, 10, 320, 60), roadText + "\n" + armyText, style);
+
+        if (gameEnded)
+        {
+            GUIStyle winStyle = new GUIStyle(GUI.skin.window);
+            winStyle.fontSize = 24;
+            winStyle.alignment = TextAnchor.MiddleCenter;
+
+            Rect winRect = new Rect(Screen.width / 2 - 150, Screen.height / 2 - 100, 300, 200);
+            GUI.Window(2, winRect, DrawWinWindow, "JOC TERMINAT", winStyle);
+        }
+    }
+
+    private void DrawWinWindow(int windowID)
+    {
+        string winner = (bluePoints >= pointsToWin) ? "ALBASTRU A CÂȘTIGAT!" : "PORTOCALIU A CÂȘTIGAT!";
+        GUI.Label(new Rect(10, 40, 280, 50), winner);
+
+        if (GUI.Button(new Rect(50, 100, 200, 50), "RESTART JOC"))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
     }
 }
