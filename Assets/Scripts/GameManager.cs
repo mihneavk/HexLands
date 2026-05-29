@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
     public enum GamePhase { Setup, Gameplay }
     public GamePhase currentPhase = GamePhase.Setup;
     public bool hasRolled = false;
-    private bool gameEnded = false; // Variabilă nouă pentru victorie
+    private bool gameEnded = false;
 
     public MapGenerator.Player currentPlayer;
 
@@ -207,7 +207,9 @@ public class GameManager : MonoBehaviour
         else if (player == MapGenerator.Player.Orange) orangePoints += amount;
 
         UpdatePointsUI();
-        CheckForWin(player);
+
+        // Verificăm câștigul doar dacă scorul a crescut (evităm situația în care cineva pierde trofeul și câștigă simultan)
+        if (amount > 0) CheckForWin(player);
     }
 
     private void UpdatePointsUI()
@@ -219,9 +221,9 @@ public class GameManager : MonoBehaviour
     private void CheckForWin(MapGenerator.Player player)
     {
         int currentPoints = (player == MapGenerator.Player.Blue) ? bluePoints : orangePoints;
-        if (currentPoints >= pointsToWin)
+        if (currentPoints >= pointsToWin && !gameEnded)
         {
-            gameEnded = true; // Jocul s-a terminat
+            gameEnded = true;
             UnityEngine.Debug.Log($"<color=green>JUCĂTORUL {player} A CÂȘTIGAT JOCUL!</color>");
             currentPhase = GamePhase.Setup;
             if (diceController != null) diceController.canRoll = false;
@@ -229,11 +231,16 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    [Header("Bonusuri")]
-    public bool blueHasLongestRoadBonus = false;
-    public bool orangeHasLongestRoadBonus = false;
-    public bool blueHasLargestArmyBonus = false;
-    public bool orangeHasLargestArmyBonus = false;
+    // ==========================================
+    // LOGICA NOUĂ PENTRU TRANSFERUL TROFEELOR
+    // ==========================================
+    [Header("Trofee: Cel Mai Lung Drum")]
+    public MapGenerator.Player longestRoadOwner = MapGenerator.Player.None;
+    public int longestRoadLength = 4; // Minim 5 drumuri pentru a obține trofeul inițial
+
+    [Header("Trofee: Cea Mai Mare Armată")]
+    public MapGenerator.Player largestArmyOwner = MapGenerator.Player.None;
+    public int largestArmySize = 2; // Minim 3 cavaleri pentru a obține trofeul inițial
 
     public void CheckLongestRoad(MapGenerator.Player player)
     {
@@ -242,21 +249,51 @@ public class GameManager : MonoBehaviour
             MapGenerator mg = FindObjectOfType<MapGenerator>();
             int length = mg != null ? mg.GetLongestRoadForPlayer(player) : 0;
 
-            if (length >= 5)
+            // Dacă jucătorul curent a stabilit un nou record (trebuie să fie strict mai mare)
+            if (length > longestRoadLength)
             {
-                if (player == MapGenerator.Player.Blue && !blueHasLongestRoadBonus)
+                longestRoadLength = length;
+
+                // Dacă trofeul abia a fost preluat sau furat
+                if (longestRoadOwner != player)
                 {
-                    blueHasLongestRoadBonus = true;
+                    // Îi luăm punctele jucătorului care a fost depășit (dacă există)
+                    if (longestRoadOwner != MapGenerator.Player.None)
+                    {
+                        AddVictoryPoint(longestRoadOwner, -2);
+                        UnityEngine.Debug.Log($"<color=red>Trofeul 'Drumul' i-a fost furat jucătorului {longestRoadOwner}!</color>");
+                    }
+
+                    // Îi dăm trofeul și punctele noului campion
+                    longestRoadOwner = player;
                     AddVictoryPoint(player, 2);
-                }
-                else if (player == MapGenerator.Player.Orange && !orangeHasLongestRoadBonus)
-                {
-                    orangeHasLongestRoadBonus = true;
-                    AddVictoryPoint(player, 2);
+                    UnityEngine.Debug.Log($"<color=green>{player} a preluat trofeul 'Cel Mai Lung Drum' ({length})!</color>");
                 }
             }
         }
         catch (System.Exception ex) { }
+    }
+
+    // Funcție pregătită pentru Cavaler (o poți apela cu numărul total de cavaleri jucați de un jucător)
+    public void CheckLargestArmy(MapGenerator.Player player, int knightsPlayed)
+    {
+        if (knightsPlayed > largestArmySize)
+        {
+            largestArmySize = knightsPlayed;
+
+            if (largestArmyOwner != player)
+            {
+                if (largestArmyOwner != MapGenerator.Player.None)
+                {
+                    AddVictoryPoint(largestArmyOwner, -2);
+                    UnityEngine.Debug.Log($"<color=red>Trofeul 'Armata' i-a fost furat jucătorului {largestArmyOwner}!</color>");
+                }
+
+                largestArmyOwner = player;
+                AddVictoryPoint(player, 2);
+                UnityEngine.Debug.Log($"<color=green>{player} a preluat trofeul 'Cea Mai Mare Armată' ({knightsPlayed})!</color>");
+            }
+        }
     }
 
     private void OnGUI()
@@ -267,8 +304,9 @@ public class GameManager : MonoBehaviour
         style.alignment = TextAnchor.MiddleCenter;
         style.normal.textColor = Color.white;
 
-        string roadText = blueHasLongestRoadBonus ? "🏆 Cel mai lung drum: Albastru" : (orangeHasLongestRoadBonus ? "🏆 Cel mai lung drum: Portocaliu" : "🏆 Cel mai lung drum: Nimeni");
-        string armyText = blueHasLargestArmyBonus ? "⚔️ Cea mai mare armată: Albastru" : (orangeHasLargestArmyBonus ? "⚔️ Cea mai mare armată: Portocaliu" : "⚔️ Cea mai mare armată: Nimeni");
+        // UI-ul va arăta acum și mărimea actuală a drumului/armatei!
+        string roadText = longestRoadOwner != MapGenerator.Player.None ? $"🏆 Cel mai lung drum: {longestRoadOwner} ({longestRoadLength})" : "🏆 Cel mai lung drum: Nimeni";
+        string armyText = largestArmyOwner != MapGenerator.Player.None ? $"⚔️ Cea mai mare armată: {largestArmyOwner} ({largestArmySize})" : "⚔️ Cea mai mare armată: Nimeni";
 
         GUI.Box(new Rect((Screen.width / 2) - 160, 10, 320, 60), roadText + "\n" + armyText, style);
 

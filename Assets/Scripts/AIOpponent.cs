@@ -6,11 +6,13 @@ public class AIOpponent : MonoBehaviour
 {
     public MapGenerator.Player aiColor = MapGenerator.Player.Orange;
     public float thinkingTime = 1.0f;
-    public int playedKnights = 0; // Ținem evidența armatei
+    public int playedKnights = 0;
 
     private GameManager gm;
     private MapGenerator mg;
     private PlayerResourceManager resManager;
+
+    private Dictionary<HexCorner, List<HexData>> currentCornerHexMap;
 
     void Start()
     {
@@ -27,6 +29,7 @@ public class AIOpponent : MonoBehaviour
     private IEnumerator AILogicRoutine()
     {
         yield return new WaitForSeconds(thinkingTime);
+        currentCornerHexMap = GetCornerHexMap();
 
         if (gm.currentPhase == GameManager.GamePhase.Setup)
         {
@@ -36,6 +39,47 @@ public class AIOpponent : MonoBehaviour
         {
             yield return StartCoroutine(PerformUtilityGameplayTurn());
         }
+    }
+
+    private float GetDiceProbability(int number)
+    {
+        if (number < 2 || number > 12 || number == 7) return 0f;
+        return (6f - Mathf.Abs(7 - number)) / 36f;
+    }
+
+    private float CalculateCornerExpectedYield(HexCorner corner, bool isCity = false)
+    {
+        if (!currentCornerHexMap.ContainsKey(corner)) return 0f;
+
+        float yield = 0f;
+        float multiplier = isCity ? 2f : 1f;
+
+        foreach (HexData hex in currentCornerHexMap[corner])
+        {
+            if (hex.resourceType != HexData.ResourceType.Desert && !hex.hasRobber)
+            {
+                yield += GetDiceProbability(hex.tokenNumber) * multiplier;
+            }
+        }
+        return yield;
+    }
+
+    private float CalculateTotalExpectedYield()
+    {
+        float totalYield = 0f;
+        foreach (HexCorner corner in mg.allCorners)
+        {
+            if (corner != null && corner.isOccupied && corner.owner == aiColor)
+            {
+                totalYield += CalculateCornerExpectedYield(corner, corner.isCity);
+            }
+        }
+        return totalYield;
+    }
+
+    private float EvaluateState(int vps, float expectedYield, int cardsInHand)
+    {
+        return (vps * 1000f) + (expectedYield * 500f) + (cardsInHand * 10f);
     }
 
     private bool AreSameLocation(UnityEngine.Component obj1, UnityEngine.Component obj2)
@@ -61,29 +105,8 @@ public class AIOpponent : MonoBehaviour
         return map;
     }
 
-    private int GetHexYieldScore(int tokenNumber)
-    {
-        if (tokenNumber == 0 || tokenNumber == 7) return 0;
-        return 6 - Mathf.Abs(7 - tokenNumber);
-    }
-
-    private int EvaluateCorner(HexCorner corner, Dictionary<HexCorner, List<HexData>> cornerHexMap)
-    {
-        if (!cornerHexMap.ContainsKey(corner)) return 0;
-        int totalYield = 0;
-        HashSet<HexData.ResourceType> diversity = new HashSet<HexData.ResourceType>();
-
-        foreach (HexData hex in cornerHexMap[corner])
-        {
-            totalYield += GetHexYieldScore(hex.tokenNumber);
-            if (hex.resourceType != HexData.ResourceType.Desert) diversity.Add(hex.resourceType);
-        }
-        return totalYield + (diversity.Count * 2);
-    }
-
     private void PerformAgenticSetupTurn()
     {
-        var cornerHexMap = GetCornerHexMap();
         List<HexCorner> validCorners = new List<HexCorner>();
 
         foreach (HexCorner corner in mg.allCorners)
@@ -95,11 +118,11 @@ public class AIOpponent : MonoBehaviour
         if (validCorners.Count > 0)
         {
             HexCorner bestCorner = null;
-            int bestScore = -1;
+            float bestScore = -1f;
 
             foreach (HexCorner c in validCorners)
             {
-                int score = EvaluateCorner(c, cornerHexMap);
+                float score = CalculateCornerExpectedYield(c, false);
                 if (score > bestScore) { bestScore = score; bestCorner = c; }
             }
 
@@ -120,12 +143,12 @@ public class AIOpponent : MonoBehaviour
             if (validEdges.Count > 0)
             {
                 HexEdge bestEdge = null;
-                int bestEdgeScore = -1000;
+                float bestEdgeScore = -1000f;
 
                 foreach (HexEdge edge in validEdges)
                 {
                     HexCorner otherCorner = (AreSameLocation(edge.corner1, bestCorner)) ? edge.corner2 : edge.corner1;
-                    int edgeScore = otherCorner.isOccupied ? -100 : EvaluateCorner(otherCorner, cornerHexMap);
+                    float edgeScore = otherCorner.isOccupied ? -100f : CalculateCornerExpectedYield(otherCorner, false);
                     if (edgeScore > bestEdgeScore) { bestEdgeScore = edgeScore; bestEdge = edge; }
                 }
 
@@ -156,50 +179,71 @@ public class AIOpponent : MonoBehaviour
         {
             safetyLimit++;
 
-            // Hoțul este evaluat constant (în caz că dă cu zarul 7, sau joacă un cavaler!)
             if (mg.isMovingRobber)
             {
                 yield return StartCoroutine(HandleRobberAI());
-                yield return new WaitForSeconds(0.5f); // Pauză după mutare
+                yield return new WaitForSeconds(0.5f);
             }
 
             yield return new WaitForSeconds(thinkingTime);
-            canStillAct = EvaluateAndExecuteBestAction();
+
+            // BUG REZOLVAT AICI: Salvăm dacă a acționat pentru a nu închide bucla prematur
+            bool cardPlayed = TryPlayDevCard();
+            bool traded = TryBankTrade();
+            bool built = EvaluateAndExecuteBestAction();
+
+            // Dacă a făcut oricare dintre aceste acțiuni, considerăm că mai poate muta
+            canStillAct = cardPlayed || traded || built;
         }
 
         gm.SkipTurn();
     }
 
+    // ==========================================
+    // LOGICA NOUĂ (MALEFICĂ) PENTRU HOȚ
+    // ==========================================
     private IEnumerator HandleRobberAI()
     {
-        UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Caut cel mai malefic loc pentru hoț...");
+        UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Caut cel mai dureros loc pentru hoț...");
         yield return new WaitForSeconds(1.5f);
 
         HexData bestHex = null;
-        int maxMaliceScore = -1000;
+        float maxMaliceScore = -10000f;
 
         foreach (HexData hex in mg.allHexes)
         {
             if (hex.hasRobber || hex.resourceType == HexData.ResourceType.Desert) continue;
 
-            int maliceScore = 0;
-            int hexYield = GetHexYieldScore(hex.tokenNumber);
+            float maliceScore = 0f;
+            // Șansa de a pica (Vânează 6, 8, 5, 9)
+            float hexYieldProb = GetDiceProbability(hex.tokenNumber);
+
+            bool hurtsMe = false;
+            bool hurtsEnemy = false;
 
             foreach (HexCorner corner in hex.adjacentCorners)
             {
                 if (corner.isOccupied)
                 {
-                    int pointValue = corner.isCity ? 2 : 1;
-
+                    if (corner.owner == aiColor) hurtsMe = true;
                     if (corner.owner == MapGenerator.Player.Blue)
                     {
-                        maliceScore += hexYield * pointValue;
-                    }
-                    else if (corner.owner == aiColor)
-                    {
-                        maliceScore -= (hexYield * pointValue * 5); // Evită masiv propriile locuri
+                        hurtsEnemy = true;
+                        maliceScore += hexYieldProb * (corner.isCity ? 2f : 1f);
                     }
                 }
+            }
+
+            // REGULA 1: Evită complet să-și blocheze propriile sate!
+            if (hurtsMe)
+            {
+                maliceScore -= 10000f;
+            }
+
+            // REGULA 2: Dacă atacă inamicul, favorizează numerele care ies des!
+            if (hurtsEnemy && !hurtsMe)
+            {
+                maliceScore += hexYieldProb * 10f;
             }
 
             if (maliceScore > maxMaliceScore)
@@ -212,9 +256,7 @@ public class AIOpponent : MonoBehaviour
         if (bestHex == null)
         {
             foreach (HexData hex in mg.allHexes)
-            {
                 if (!hex.hasRobber) { bestHex = hex; break; }
-            }
         }
 
         UnityEngine.Debug.Log($"<color=orange>[Utility AI]</color> Am mutat hoțul pe {bestHex.resourceType} cu numărul {bestHex.tokenNumber}!");
@@ -223,34 +265,137 @@ public class AIOpponent : MonoBehaviour
 
     private bool EvaluateAndExecuteBestAction()
     {
-        // 1. Cărțile de dezvoltare au prioritate maximă
-        if (TryPlayDevCard()) return true;
-
         int wood = resManager.GetResourceCount(aiColor, HexData.ResourceType.Wood);
         int brick = resManager.GetResourceCount(aiColor, HexData.ResourceType.Brick);
         int sheep = resManager.GetResourceCount(aiColor, HexData.ResourceType.Sheep);
         int wheat = resManager.GetResourceCount(aiColor, HexData.ResourceType.Wheat);
         int ore = resManager.GetResourceCount(aiColor, HexData.ResourceType.Ore);
+        int totalCards = wood + brick + sheep + wheat + ore;
 
-        int cityScore = (ore >= 3 && wheat >= 2) ? 100 : 0;
-        int settlementScore = (wood >= 1 && brick >= 1 && sheep >= 1 && wheat >= 1) ? 80 : 0;
-        int devCardScore = (ore >= 1 && wheat >= 1 && sheep >= 1) ? 60 : 0;
-        int roadScore = (wood >= 1 && brick >= 1) ? 40 : 0;
+        int currentVPs = gm.orangePoints;
+        float currentYield = CalculateTotalExpectedYield();
 
-        // 2. Acțiuni standard
-        if (cityScore > 0 && TryBuildCity()) return true;
-        if (settlementScore > 0 && TryBuildSettlement()) return true;
-        if (devCardScore > 0 && TryBuyDevCard()) return true;
-        if (roadScore > 0 && TryBuildRoad(false)) return true;
+        float bestScore = EvaluateState(currentVPs, currentYield, totalCards);
+        if (totalCards > 7) bestScore -= 500f;
 
-        // 3. Dacă e complet blocat, încearcă să facă Trade cu banca!
-        if (TryBankTrade()) return true;
+        System.Action bestAction = null;
+
+        if (ore >= 3 && wheat >= 2)
+        {
+            foreach (HexCorner corner in mg.allCorners)
+            {
+                if (corner != null && corner.isOccupied && corner.owner == aiColor && !corner.isCity)
+                {
+                    float futureYield = currentYield + CalculateCornerExpectedYield(corner, false);
+                    float score = EvaluateState(currentVPs + 1, futureYield, totalCards - 5);
+
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestAction = () => ExecuteBuildCity(corner);
+                    }
+                }
+            }
+        }
+
+        if (wood >= 1 && brick >= 1 && sheep >= 1 && wheat >= 1)
+        {
+            foreach (HexCorner corner in mg.allCorners)
+            {
+                if (corner != null && !corner.isOccupied && corner.IsValidForSettlement() && HasRoadConnected(corner))
+                {
+                    float futureYield = currentYield + CalculateCornerExpectedYield(corner, false);
+                    float score = EvaluateState(currentVPs + 1, futureYield, totalCards - 4);
+
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestAction = () => ExecuteBuildSettlement(corner);
+                    }
+                }
+            }
+        }
+
+        if (ore >= 1 && wheat >= 1 && sheep >= 1)
+        {
+            float score = EvaluateState(currentVPs, currentYield, totalCards - 3) + 300f;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestAction = () => ExecuteBuyDevCard();
+            }
+        }
+
+        if (wood >= 1 && brick >= 1)
+        {
+            foreach (HexEdge edge in mg.allEdges)
+            {
+                if (edge != null && !edge.isOccupied && CanBuildRoadHere(edge))
+                {
+                    float score = EvaluateState(currentVPs, currentYield, totalCards - 2) + 50f;
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestAction = () => ExecuteBuildRoad(edge);
+                    }
+                }
+            }
+        }
+
+        if (bestAction != null)
+        {
+            bestAction.Invoke();
+            return true;
+        }
 
         return false;
     }
 
+    private void ExecuteBuildCity(HexCorner corner)
+    {
+        corner.UpgradeToCity();
+        resManager.RemoveResource(aiColor, HexData.ResourceType.Ore, 3);
+        resManager.RemoveResource(aiColor, HexData.ResourceType.Wheat, 2);
+        gm.AddVictoryPoint(aiColor, 1);
+        UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Am construit un ORAȘ bazat pe simulare!");
+    }
+
+    private void ExecuteBuildSettlement(HexCorner targetCorner)
+    {
+        targetCorner.gameObject.SetActive(true);
+        GameObject house = Instantiate(FindObjectOfType<SettlementPlacer>().settlementPrefab, targetCorner.transform.position, Quaternion.identity);
+        targetCorner.visualHouseObject = house;
+        house.GetComponent<SpriteRenderer>().sprite = mg.GetCurrentHouseSprite();
+        targetCorner.BuildSettlement(aiColor);
+
+        resManager.RemoveResource(aiColor, HexData.ResourceType.Wood, 1);
+        resManager.RemoveResource(aiColor, HexData.ResourceType.Brick, 1);
+        resManager.RemoveResource(aiColor, HexData.ResourceType.Sheep, 1);
+        resManager.RemoveResource(aiColor, HexData.ResourceType.Wheat, 1);
+        gm.AddVictoryPoint(aiColor, 1);
+        UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Am construit o CASĂ bazat pe simulare!");
+    }
+
+    private void ExecuteBuyDevCard()
+    {
+        FindObjectOfType<DevCardManager>().BuyDevelopmentCard();
+        UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Am cumpărat o Carte de Dezvoltare bazat pe simulare!");
+    }
+
+    private void ExecuteBuildRoad(HexEdge targetEdge)
+    {
+        targetEdge.gameObject.SetActive(true);
+        targetEdge.owner = aiColor;
+        targetEdge.BuildRoad(false);
+
+        resManager.RemoveResource(aiColor, HexData.ResourceType.Wood, 1);
+        resManager.RemoveResource(aiColor, HexData.ResourceType.Brick, 1);
+        gm.CheckLongestRoad(aiColor);
+        UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Am extins un DRUM bazat pe simulare!");
+    }
+
     // ==========================================
-    // LOGICA INTELIGENTĂ A CĂRȚILOR DE DEZVOLTARE
+    // LOGICA NOUĂ PENTRU YEAR OF PLENTY
     // ==========================================
     private bool TryPlayDevCard()
     {
@@ -263,10 +408,30 @@ public class AIOpponent : MonoBehaviour
         {
             wallet.devCards.Remove(DevCardManager.DevCardType.YearOfPlenty);
             devManager.UpdateDevCardsVisuals(wallet);
-            // Efect AI: Își acordă Lemn și Argilă gratuit ca să se poată extinde rapid
-            resManager.AddResource(aiColor, HexData.ResourceType.Wood, 1);
-            resManager.AddResource(aiColor, HexData.ResourceType.Brick, 1);
-            UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Am jucat Year of Plenty (Anul Abundenței)!");
+
+            int ore = resManager.GetResourceCount(aiColor, HexData.ResourceType.Ore);
+            int wheat = resManager.GetResourceCount(aiColor, HexData.ResourceType.Wheat);
+            int wood = resManager.GetResourceCount(aiColor, HexData.ResourceType.Wood);
+            int brick = resManager.GetResourceCount(aiColor, HexData.ResourceType.Brick);
+
+            // AI-ul alege doar ce îi trebuie!
+            if (ore >= 1 && wheat >= 1)
+            {
+                resManager.AddResource(aiColor, HexData.ResourceType.Ore, 1);
+                resManager.AddResource(aiColor, HexData.ResourceType.Wheat, 1);
+            }
+            else if (wood >= 1 && brick == 0)
+            {
+                resManager.AddResource(aiColor, HexData.ResourceType.Brick, 1);
+                resManager.AddResource(aiColor, HexData.ResourceType.Wheat, 1);
+            }
+            else
+            {
+                resManager.AddResource(aiColor, HexData.ResourceType.Wood, 1);
+                resManager.AddResource(aiColor, HexData.ResourceType.Brick, 1);
+            }
+
+            UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Am jucat Year of Plenty (Anul Abundenței) și am luat resurse strategice!");
             return true;
         }
 
@@ -275,7 +440,6 @@ public class AIOpponent : MonoBehaviour
             wallet.devCards.Remove(DevCardManager.DevCardType.Monopoly);
             devManager.UpdateDevCardsVisuals(wallet);
 
-            // Efect AI: Furt malefic. Scanează ce ai tu (Blue) cel mai mult și fură tot!
             HexData.ResourceType bestToSteal = HexData.ResourceType.Ore;
             int maxEnemyHas = 0;
             HexData.ResourceType[] allTypes = { HexData.ResourceType.Wood, HexData.ResourceType.Brick, HexData.ResourceType.Sheep, HexData.ResourceType.Wheat, HexData.ResourceType.Ore };
@@ -289,7 +453,6 @@ public class AIOpponent : MonoBehaviour
             {
                 resManager.RemoveResource(MapGenerator.Player.Blue, bestToSteal, maxEnemyHas);
                 resManager.AddResource(aiColor, bestToSteal, maxEnemyHas);
-                UnityEngine.Debug.Log($"<color=orange>[Utility AI]</color> Am jucat Monopoly și ți-am furat tot {bestToSteal}-ul ({maxEnemyHas} buc)!");
             }
             return true;
         }
@@ -298,9 +461,10 @@ public class AIOpponent : MonoBehaviour
         {
             wallet.devCards.Remove(DevCardManager.DevCardType.RoadBuilding);
             devManager.UpdateDevCardsVisuals(wallet);
-            UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Am jucat Construire Drumuri!");
-            TryBuildRoad(true);
-            TryBuildRoad(true);
+
+            foreach (HexEdge e in mg.allEdges) { if (e != null && !e.isOccupied && CanBuildRoadHere(e)) { e.owner = aiColor; e.BuildRoad(false); e.gameObject.SetActive(true); break; } }
+            foreach (HexEdge e in mg.allEdges) { if (e != null && !e.isOccupied && CanBuildRoadHere(e)) { e.owner = aiColor; e.BuildRoad(false); e.gameObject.SetActive(true); break; } }
+            gm.CheckLongestRoad(aiColor);
             return true;
         }
 
@@ -308,14 +472,10 @@ public class AIOpponent : MonoBehaviour
         {
             bool shouldPlayKnight = false;
 
-            // EXCEPȚIE ARMATA: Dacă îl jucăm pe acesta și preluăm conducerea
-            if (playedKnights >= 2 && !gm.orangeHasLargestArmyBonus)
-            {
+            if (playedKnights >= 2 && gm.largestArmyOwner != aiColor)
                 shouldPlayKnight = true;
-            }
             else
             {
-                // CONDITII TACTICE
                 HexData currentRobberHex = null;
                 foreach (HexData hex in mg.allHexes) { if (hex.hasRobber) { currentRobberHex = hex; break; } }
 
@@ -333,9 +493,8 @@ public class AIOpponent : MonoBehaviour
                         }
                     }
 
-                    if (hurtsMe) shouldPlayKnight = true; // Mă sugrumă pe mine, scap de el!
-                    else if (!hurtsEnemy) shouldPlayKnight = true; // Nu sugrumă pe nimeni relevant, mută-l ca să facă rău!
-                    // Dacă (hurtsEnemy && !hurtsMe) -> Îl lăsăm acolo. Ne convine suferința inamicului.
+                    if (hurtsMe) shouldPlayKnight = true;
+                    else if (!hurtsEnemy) shouldPlayKnight = true;
                 }
             }
 
@@ -344,28 +503,22 @@ public class AIOpponent : MonoBehaviour
                 wallet.devCards.Remove(DevCardManager.DevCardType.Knight);
                 devManager.UpdateDevCardsVisuals(wallet);
                 playedKnights++;
-                UnityEngine.Debug.Log("<color=orange>[Utility AI]</color> Am jucat un Cavaler tactic!");
+                gm.CheckLargestArmy(aiColor, playedKnights);
                 mg.StartRobberPhase();
-                // Returnează true, iar bucla principală va muta pionul instant!
                 return true;
             }
         }
-
         return false;
     }
 
-    // ==========================================
-    // LOGICA SCHIMBURILOR COMERCIALE
-    // ==========================================
     private bool TryBankTrade()
     {
         HexData.ResourceType excessResource = HexData.ResourceType.Desert;
         int maxAmount = 0;
-        int bestRate = 4; // Baza băncii
+        int bestRate = 4;
 
         HexData.ResourceType[] allTypes = { HexData.ResourceType.Wood, HexData.ResourceType.Brick, HexData.ResourceType.Sheep, HexData.ResourceType.Wheat, HexData.ResourceType.Ore };
 
-        // 1. Caută de ce resursă avem prea mult
         foreach (var type in allTypes)
         {
             int amount = resManager.GetResourceCount(aiColor, type);
@@ -374,7 +527,6 @@ public class AIOpponent : MonoBehaviour
 
         if (maxAmount <= 0) return false;
 
-        // 2. Caută cele mai bune porturi pe care le deține AI-ul
         foreach (HexCorner corner in mg.allCorners)
         {
             if (corner.isOccupied && corner.owner == aiColor && corner.currentHarborType != Harbor.HarborType.None)
@@ -387,12 +539,11 @@ public class AIOpponent : MonoBehaviour
                     (corner.currentHarborType == Harbor.HarborType.Wheat2to1 && excessResource == HexData.ResourceType.Wheat) ||
                     (corner.currentHarborType == Harbor.HarborType.Ore2to1 && excessResource == HexData.ResourceType.Ore))
                 {
-                    bestRate = 2; // Mai bun de atât nu se poate
+                    bestRate = 2;
                 }
             }
         }
 
-        // 3. Execută schimbul dacă e permis
         if (maxAmount >= bestRate)
         {
             HexData.ResourceType neededResource = HexData.ResourceType.Desert;
@@ -408,90 +559,6 @@ public class AIOpponent : MonoBehaviour
             {
                 resManager.RemoveResource(aiColor, excessResource, bestRate);
                 resManager.AddResource(aiColor, neededResource, 1);
-                UnityEngine.Debug.Log($"<color=orange>[Utility AI]</color> TRADE: Am dat {bestRate} {excessResource} pentru 1 {neededResource}.");
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private bool TryBuildCity()
-    {
-        foreach (HexCorner corner in mg.allCorners)
-        {
-            if (corner != null && corner.isOccupied && corner.owner == aiColor && !corner.isCity)
-            {
-                corner.UpgradeToCity();
-                resManager.RemoveResource(aiColor, HexData.ResourceType.Ore, 3);
-                resManager.RemoveResource(aiColor, HexData.ResourceType.Wheat, 2);
-                gm.AddVictoryPoint(aiColor, 1);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private bool TryBuildSettlement()
-    {
-        var cornerHexMap = GetCornerHexMap();
-        HexCorner bestTarget = null;
-        int bestScore = -1;
-
-        foreach (HexCorner corner in mg.allCorners)
-        {
-            if (corner != null && !corner.isOccupied && corner.IsValidForSettlement() && HasRoadConnected(corner))
-            {
-                int score = EvaluateCorner(corner, cornerHexMap);
-                if (score > bestScore) { bestScore = score; bestTarget = corner; }
-            }
-        }
-
-        if (bestTarget != null)
-        {
-            bestTarget.gameObject.SetActive(true);
-            GameObject house = Instantiate(FindObjectOfType<SettlementPlacer>().settlementPrefab, bestTarget.transform.position, Quaternion.identity);
-            bestTarget.visualHouseObject = house;
-            house.GetComponent<SpriteRenderer>().sprite = mg.GetCurrentHouseSprite();
-            bestTarget.BuildSettlement(aiColor);
-
-            resManager.RemoveResource(aiColor, HexData.ResourceType.Wood, 1);
-            resManager.RemoveResource(aiColor, HexData.ResourceType.Brick, 1);
-            resManager.RemoveResource(aiColor, HexData.ResourceType.Sheep, 1);
-            resManager.RemoveResource(aiColor, HexData.ResourceType.Wheat, 1);
-            gm.AddVictoryPoint(aiColor, 1);
-            return true;
-        }
-        return false;
-    }
-
-    private bool TryBuyDevCard()
-    {
-        DevCardManager devManager = FindObjectOfType<DevCardManager>();
-        if (devManager != null)
-        {
-            devManager.BuyDevelopmentCard();
-            return true;
-        }
-        return false;
-    }
-
-    // Am adăugat isFree ca să știm dacă e de la o carte sau din buzunar!
-    private bool TryBuildRoad(bool isFree)
-    {
-        foreach (HexEdge edge in mg.allEdges)
-        {
-            if (edge != null && !edge.isOccupied && CanBuildRoadHere(edge))
-            {
-                edge.gameObject.SetActive(true);
-                edge.owner = aiColor;
-                edge.BuildRoad(false); // MapGen se ocupă de vizual
-
-                if (!isFree)
-                {
-                    resManager.RemoveResource(aiColor, HexData.ResourceType.Wood, 1);
-                    resManager.RemoveResource(aiColor, HexData.ResourceType.Brick, 1);
-                }
-                FindObjectOfType<GameManager>().CheckLongestRoad(aiColor);
                 return true;
             }
         }
@@ -501,21 +568,16 @@ public class AIOpponent : MonoBehaviour
     private bool HasRoadConnected(HexCorner corner)
     {
         foreach (HexEdge e in mg.allEdges)
-        {
             if (e != null && e.isOccupied && e.owner == aiColor)
-            {
                 if (AreSameLocation(e.corner1, corner) || AreSameLocation(e.corner2, corner)) return true;
-            }
-        }
         return false;
     }
 
     private bool CanBuildRoadHere(HexEdge edge)
     {
         foreach (HexCorner c in mg.allCorners)
-        {
             if (c != null && c.isOccupied && c.owner == aiColor && (AreSameLocation(edge.corner1, c) || AreSameLocation(edge.corner2, c))) return true;
-        }
+
         foreach (HexEdge otherEdge in mg.allEdges)
         {
             if (otherEdge != null && otherEdge.isOccupied && otherEdge.owner == aiColor)
@@ -528,9 +590,7 @@ public class AIOpponent : MonoBehaviour
                 {
                     bool blocked = false;
                     foreach (HexCorner c in mg.allCorners)
-                    {
                         if (c != null && AreSameLocation(c, sharedPos) && c.isOccupied && c.owner != aiColor) blocked = true;
-                    }
                     if (!blocked) return true;
                 }
             }
