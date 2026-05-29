@@ -72,7 +72,17 @@ public class DiceController : MonoBehaviour
 
         if (lastResult == 7)
         {
-            mg.StartRobberPhase();
+            // Apelăm noul manager pentru a verifica dacă e cineva bogat!
+            DiscardManager discardManager = FindObjectOfType<DiscardManager>();
+            if (discardManager != null)
+            {
+                discardManager.HandleRuleOf7();
+            }
+            else
+            {
+                // Fallback de siguranță dacă ai uitat să pui scriptul pe obiect
+                mg.StartRobberPhase();
+            }
         }
         else
         {
