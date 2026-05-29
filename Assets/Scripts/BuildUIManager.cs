@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.UI; // Folosim UI clasic pentru butoane/imagini
+using UnityEngine.UI;
 
 public class BuildUIManager : MonoBehaviour
 {
@@ -7,74 +7,65 @@ public class BuildUIManager : MonoBehaviour
     public Button buildSettlementBtn;
     public Button buildRoadBtn;
     public Button buildCityBtn;
+    public Button buyDevCardBtn; // NOU: Butonul pentru Cărți de Dezvoltare
 
     [Header("Referințe")]
     public PlayerResourceManager resourceManager;
     public GameManager gameManager;
 
-    // Funcție apelată ori de câte ori se schimbă ceva (tura sau resursele)
     public void RefreshButtons()
     {
-        // Dacă suntem în faza de Setup, butoanele ar putea fi ascunse sau dezactivate 
-        // (deoarece jucătorul pune casele gratuit, fără butoane)
         if (gameManager.currentPhase == GameManager.GamePhase.Setup)
         {
-            buildSettlementBtn.gameObject.SetActive(false);
-            buildRoadBtn.gameObject.SetActive(false);
-            buildCityBtn.gameObject.SetActive(false);
+            if (buildSettlementBtn != null) buildSettlementBtn.gameObject.SetActive(false);
+            if (buildRoadBtn != null) buildRoadBtn.gameObject.SetActive(false);
+            if (buildCityBtn != null) buildCityBtn.gameObject.SetActive(false);
+            if (buyDevCardBtn != null) buyDevCardBtn.gameObject.SetActive(false);
             return;
         }
 
-        // Activăm butoanele și le facem vizibile
-        buildSettlementBtn.gameObject.SetActive(true);
-        buildRoadBtn.gameObject.SetActive(true);
-        buildCityBtn.gameObject.SetActive(true);
+        if (buildSettlementBtn != null) buildSettlementBtn.gameObject.SetActive(true);
+        if (buildRoadBtn != null) buildRoadBtn.gameObject.SetActive(true);
+        if (buildCityBtn != null) buildCityBtn.gameObject.SetActive(true);
+        if (buyDevCardBtn != null) buyDevCardBtn.gameObject.SetActive(true);
 
         MapGenerator.Player currentPlayer = gameManager.currentPlayer;
 
         // 1. Verificăm Casa
-        if (resourceManager.CanAffordSettlement(currentPlayer))
+        if (buildSettlementBtn != null)
         {
-            buildSettlementBtn.interactable = true;
-            buildSettlementBtn.image.color = Color.white; // Opac
-        }
-        else
-        {
-            buildSettlementBtn.interactable = false;
-            buildSettlementBtn.image.color = new Color(1f, 1f, 1f, 0.85f); // Transparent
+            bool canAfford = resourceManager.CanAffordSettlement(currentPlayer);
+            buildSettlementBtn.interactable = canAfford;
+            buildSettlementBtn.image.color = canAfford ? Color.white : new Color(1f, 1f, 1f, 0.85f);
         }
 
         // 2. Verificăm Drumul
-        if (resourceManager.CanAffordRoad(currentPlayer))
+        if (buildRoadBtn != null)
         {
-            buildRoadBtn.interactable = true;
-            buildRoadBtn.image.color = Color.white; // Opac
-        }
-        else
-        {
-            buildRoadBtn.interactable = false;
-            buildRoadBtn.image.color = new Color(1f, 1f, 1f, 0.85f); // Transparent
+            bool canAfford = resourceManager.CanAffordRoad(currentPlayer);
+            buildRoadBtn.interactable = canAfford;
+            buildRoadBtn.image.color = canAfford ? Color.white : new Color(1f, 1f, 1f, 0.85f);
         }
 
-        if(resourceManager.CanAffordCity(currentPlayer))
+        // 3. Verificăm Orașul
+        if (buildCityBtn != null)
         {
-            buildCityBtn.interactable = true;
-            buildCityBtn.image.color = Color.white;
+            bool canAfford = resourceManager.CanAffordCity(currentPlayer);
+            buildCityBtn.interactable = canAfford;
+            buildCityBtn.image.color = canAfford ? Color.white : new Color(1f, 1f, 1f, 0.85f);
         }
-        else
+
+        // 4. Verificăm Cartea de Dezvoltare
+        if (buyDevCardBtn != null)
         {
-            buildCityBtn.interactable = false;  
-            buildCityBtn.image.color = new Color(1f, 1f, 1f, 0.85f);
+            bool canAfford = resourceManager.CanAffordDevCard(currentPlayer);
+            buyDevCardBtn.interactable = canAfford;
+            buyDevCardBtn.image.color = canAfford ? Color.white : new Color(1f, 1f, 1f, 0.85f);
         }
     }
 
     private void Update()
     {
         RefreshButtons();
-    }
-
-    private void Start()
-    {
-        //buildCityBtn.gameObject.SetActive(false);
     }
 }

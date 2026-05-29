@@ -156,4 +156,10 @@ public class PlayerResourceManager : MonoBehaviour
         wallet.ore -= 3; wallet.wheat -= 2;
         UpdateUI(wallet);
     }
+
+    public bool CanAffordDevCard(MapGenerator.Player player)
+    {
+        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        return wallet.wheat >= 1 && wallet.sheep >= 1 && wallet.ore >= 1;
+    }
 }

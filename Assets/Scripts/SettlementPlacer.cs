@@ -98,18 +98,8 @@ public class SettlementPlacer : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            // RADARUL: Aflăm de ce te blochezi
-            if (currentMode == BuildMode.None)
-            {
-                UnityEngine.Debug.Log("❌ CLICK IGNORAT: Jocul este în modul 'None' (Pauză). Așteaptă o comandă de la joc sau apasă un buton de construcție!");
-                return;
-            }
-
-            if (Camera.main == null)
-            {
-                UnityEngine.Debug.LogError("🚨 EROARE: Nu găsesc Camera! Asigură-te că obiectul camerei din ierarhie are tag-ul 'MainCamera'.");
-                return;
-            }
+            if (currentMode == BuildMode.None) return;
+            if (Camera.main == null) return;
 
             GameManager gm = FindObjectOfType<GameManager>();
             PlayerResourceManager resManager = FindObjectOfType<PlayerResourceManager>();
@@ -118,12 +108,7 @@ public class SettlementPlacer : MonoBehaviour
             bool isSetup = (gm.currentPhase == GameManager.GamePhase.Setup);
 
             RaycastHit2D[] hits = Physics2D.RaycastAll(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-
-            if (hits.Length == 0)
-            {
-                UnityEngine.Debug.LogWarning("⚠️ Ai dat click pe un loc gol sau îți blochează ceva interfața UI!");
-                return;
-            }
+            if (hits.Length == 0) return;
 
             foreach (var hit in hits)
             {
@@ -134,11 +119,7 @@ public class SettlementPlacer : MonoBehaviour
                     HexCorner corner = hit.collider.GetComponent<HexCorner>();
                     if (corner != null && !corner.isOccupied && corner.IsValidForSettlement() && (isSetup || HasRoadConnected(corner, gm.currentPlayer)))
                     {
-                        if (settlementPrefab == null)
-                        {
-                            UnityEngine.Debug.LogError("🚨 EROARE CRITICĂ: Nu ai pus modelul casei în căsuța 'Settlement Prefab' a scriptului SettlementPlacer!");
-                            return;
-                        }
+                        if (settlementPrefab == null) return;
 
                         InstantiateHouse(corner, gm);
                         if (!isSetup) { if (resManager != null) resManager.SpendForSettlement(gm.currentPlayer); currentMode = BuildMode.None; SetVisualsVisibility(); }
@@ -150,11 +131,44 @@ public class SettlementPlacer : MonoBehaviour
                     HexEdge edge = hit.collider.GetComponent<HexEdge>();
                     if (edge != null && !edge.isOccupied && CanBuildRoadHere(edge, gm.currentPlayer, isSetup, gm.lastPlacedSettlement))
                     {
-                        edge.BuildRoad(roadsRemainingFromCard > 0);
-                        if (roadsRemainingFromCard > 0) roadsRemainingFromCard--;
+                        // ----- AICI E REPARAȚIA PENTRU ROAD BUILDING -----
+                        if (roadsRemainingFromCard > 0)
+                        {
+                            edge.BuildRoad(true); // Gratuit!
+                            roadsRemainingFromCard--;
 
-                        if (roadsRemainingFromCard == 0 || isSetup) { currentMode = BuildMode.None; SetVisualsVisibility(); gm.OnRoadFinished(); }
-                        else { if (resManager != null) resManager.SpendForRoad(gm.currentPlayer); currentMode = BuildMode.None; SetVisualsVisibility(); }
+                            if (roadsRemainingFromCard > 0)
+                            {
+                                // Mai avem un drum, rămânem în modul PlacingRoad!
+                                currentMode = BuildMode.PlacingRoad;
+                                SetVisualsVisibility();
+                            }
+                            else
+                            {
+                                // Am pus ambele drumuri gratis, terminăm.
+                                currentMode = BuildMode.None;
+                                SetVisualsVisibility();
+                            }
+                        }
+                        else
+                        {
+                            // Cumpărare normală sau Faza Setup
+                            edge.BuildRoad(false);
+
+                            if (isSetup)
+                            {
+                                currentMode = BuildMode.None;
+                                SetVisualsVisibility();
+                                gm.OnRoadFinished();
+                            }
+                            else
+                            {
+                                if (resManager != null) resManager.SpendForRoad(gm.currentPlayer);
+                                currentMode = BuildMode.None;
+                                SetVisualsVisibility();
+                            }
+                        }
+                        // --------------------------------------------------
 
                         if (FindObjectOfType<BuildUIManager>() != null) FindObjectOfType<BuildUIManager>().RefreshButtons();
                         return;
@@ -168,7 +182,8 @@ public class SettlementPlacer : MonoBehaviour
                         corner.UpgradeToCity();
                         if (resManager != null) resManager.SpendForCity(gm.currentPlayer);
                         gm.AddVictoryPoint(gm.currentPlayer, 1);
-                        currentMode = BuildMode.None; SetVisualsVisibility();
+                        currentMode = BuildMode.None;
+                        SetVisualsVisibility();
                         if (FindObjectOfType<BuildUIManager>() != null) FindObjectOfType<BuildUIManager>().RefreshButtons();
                         return;
                     }
@@ -188,44 +203,35 @@ public class SettlementPlacer : MonoBehaviour
             MapGenerator.Player currentPlayer = gm.currentPlayer;
 
             if (mg.allCorners != null)
-            {
                 foreach (HexCorner c in mg.allCorners)
                     if (c != null && c.gameObject != null) c.gameObject.SetActive(c.isOccupied);
-            }
 
             if (mg.allEdges != null)
-            {
                 foreach (HexEdge e in mg.allEdges)
                     if (e != null && e.gameObject != null && !e.isOccupied) e.gameObject.SetActive(false);
-            }
 
             if (currentMode == BuildMode.PlacingSettlement)
             {
                 if (mg.allCorners != null)
-                {
                     foreach (HexCorner c in mg.allCorners)
-                    {
                         if (c != null && c.gameObject != null && !c.isOccupied && c.IsValidForSettlement())
-                        {
                             if (gm.currentPhase == GameManager.GamePhase.Setup || HasRoadConnected(c, currentPlayer))
                                 c.gameObject.SetActive(true);
-                        }
-                    }
-                }
             }
             else if (currentMode == BuildMode.PlacingRoad)
             {
                 if (mg.allEdges != null)
-                {
                     foreach (HexEdge e in mg.allEdges)
-                    {
                         if (e != null && e.gameObject != null && !e.isOccupied)
-                        {
                             if (CanBuildRoadHere(e, currentPlayer, (gm.currentPhase == GameManager.GamePhase.Setup), gm.lastPlacedSettlement))
                                 e.ShowPotentialPath();
-                        }
-                    }
-                }
+            }
+            else if (currentMode == BuildMode.PlacingCity)
+            {
+                if (mg.allCorners != null)
+                    foreach (HexCorner c in mg.allCorners)
+                        if (c != null && c.gameObject != null)
+                            c.gameObject.SetActive(c.isOccupied && c.owner == currentPlayer && !c.isCity);
             }
         }
         catch (Exception ex)

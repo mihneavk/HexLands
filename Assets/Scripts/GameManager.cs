@@ -152,7 +152,33 @@ public class GameManager : MonoBehaviour
         UnityEngine.Debug.Log("Setup terminat! Începe jocul normal. Albastru, dă cu zarul.");
     }
 
-    private void Update() { }
+    private void Update()
+    {
+        // CHEAT CODE PENTRU DEBUG: Apasă tasta "\" (Backslash) pentru resurse
+        if (Input.GetKeyDown(KeyCode.Backslash))
+        {
+            GiveDebugResources();
+        }
+    }
+
+    private void GiveDebugResources()
+    {
+        PlayerResourceManager resourceManager = FindObjectOfType<PlayerResourceManager>();
+        if (resourceManager != null)
+        {
+            // Adăugăm câte 8 din fiecare resursă jucătorului curent
+            resourceManager.AddResource(currentPlayer, HexData.ResourceType.Wood, 8);
+            resourceManager.AddResource(currentPlayer, HexData.ResourceType.Brick, 8);
+            resourceManager.AddResource(currentPlayer, HexData.ResourceType.Sheep, 8);
+            resourceManager.AddResource(currentPlayer, HexData.ResourceType.Wheat, 8);
+            resourceManager.AddResource(currentPlayer, HexData.ResourceType.Ore, 8);
+
+            UnityEngine.Debug.Log($"<color=magenta>[DEBUG CHEAT]</color> S-au adăugat câte 8 resurse din toate tipurile pentru jucătorul {currentPlayer}!");
+
+            // Reîmprospătăm butoanele ca să se aprindă imediat (să arate că poți cumpăra)
+            if (buildUIManager != null) buildUIManager.RefreshButtons();
+        }
+    }
 
     public void SkipTurn()
     {
