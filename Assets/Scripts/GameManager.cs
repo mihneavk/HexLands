@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement; // <-- NOU: Adăugat pentru a putea reîncărca scena
 
 public class GameManager : MonoBehaviour
 {
@@ -31,33 +32,16 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // BLINDAJ: Indiferent ce lipsește, jocul NU va mai crăpa la început!
-        try
+        UpdatePointsUI();
+        hasRolled = true;
+        currentPlayer = setupOrder[0];
+        if (diceController != null) diceController.canRoll = false;
+        UnityEngine.Debug.Log($"Faza Setup: {currentPlayer} plasează prima casă și drum.");
+
+        SettlementPlacer[] placers = FindObjectsOfType<SettlementPlacer>();
+        foreach (SettlementPlacer sp in placers)
         {
-            UpdatePointsUI();
-            hasRolled = true;
-            currentPlayer = setupOrder[0];
-
-            if (diceController != null)
-            {
-                diceController.canRoll = false;
-            }
-            else
-            {
-                UnityEngine.Debug.LogWarning("⚠️ ATENȚIE: Obiectul 'Dice Controller' nu este legat în GameManager!");
-            }
-
-            UnityEngine.Debug.Log($"Faza Setup: {currentPlayer} plasează prima casă și drum.");
-
-            SettlementPlacer[] placers = FindObjectsOfType<SettlementPlacer>();
-            foreach (SettlementPlacer sp in placers)
-            {
-                sp.ActivateSettlementMode();
-            }
-        }
-        catch (System.Exception ex)
-        {
-            UnityEngine.Debug.LogError($"🚨 EROARE FATALĂ în GameManager la pornire: {ex.Message}");
+            sp.ActivateSettlementMode();
         }
     }
 
@@ -101,7 +85,7 @@ public class GameManager : MonoBehaviour
             {
                 if (hex.resourceType != HexData.ResourceType.Desert)
                 {
-                    resourceManager.AddResource(currentPlayer, hex.resourceType, 1);
+                    if (resourceManager != null) resourceManager.AddResource(currentPlayer, hex.resourceType, 1);
                     UnityEngine.Debug.Log($"Resursă de start: {currentPlayer} a primit {hex.resourceType} de la hex-ul {hex.gameObject.name}");
                 }
             }
@@ -159,6 +143,13 @@ public class GameManager : MonoBehaviour
         {
             GiveDebugResources();
         }
+
+        // CHEAT CODE PENTRU RESET: Apasă tasta "R" pentru a reîncepe jocul de la zero
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            UnityEngine.Debug.Log("<color=red>[DEBUG] JOCUL A FOST RESETAT!</color>");
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
     }
 
     private void GiveDebugResources()
@@ -166,7 +157,6 @@ public class GameManager : MonoBehaviour
         PlayerResourceManager resourceManager = FindObjectOfType<PlayerResourceManager>();
         if (resourceManager != null)
         {
-            // Adăugăm câte 8 din fiecare resursă jucătorului curent
             resourceManager.AddResource(currentPlayer, HexData.ResourceType.Wood, 8);
             resourceManager.AddResource(currentPlayer, HexData.ResourceType.Brick, 8);
             resourceManager.AddResource(currentPlayer, HexData.ResourceType.Sheep, 8);
@@ -175,7 +165,6 @@ public class GameManager : MonoBehaviour
 
             UnityEngine.Debug.Log($"<color=magenta>[DEBUG CHEAT]</color> S-au adăugat câte 8 resurse din toate tipurile pentru jucătorul {currentPlayer}!");
 
-            // Reîmprospătăm butoanele ca să se aprindă imediat (să arate că poți cumpăra)
             if (buildUIManager != null) buildUIManager.RefreshButtons();
         }
     }
@@ -255,23 +244,31 @@ public class GameManager : MonoBehaviour
 
     public void CheckLongestRoad(MapGenerator.Player player)
     {
-        MapGenerator mg = FindObjectOfType<MapGenerator>();
-        int length = mg != null ? mg.GetLongestRoadForPlayer(player) : 0;
-
-        if (length >= 5)
+        try
         {
-            if (player == MapGenerator.Player.Blue && !blueHasLongestRoadBonus)
+            MapGenerator mg = FindObjectOfType<MapGenerator>();
+            int length = mg != null ? mg.GetLongestRoadForPlayer(player) : 0;
+
+            if (length >= 5)
             {
-                blueHasLongestRoadBonus = true;
-                AddVictoryPoint(player, 2);
-                UnityEngine.Debug.Log("<color=blue>Albastru a primit bonusul pentru Cel Mai Lung Drum!</color>");
+                if (player == MapGenerator.Player.Blue && !blueHasLongestRoadBonus)
+                {
+                    blueHasLongestRoadBonus = true;
+                    AddVictoryPoint(player, 2);
+                    UnityEngine.Debug.Log("<color=blue>Albastru a primit bonusul pentru Cel Mai Lung Drum!</color>");
+                }
+                else if (player == MapGenerator.Player.Orange && !orangeHasLongestRoadBonus)
+                {
+                    orangeHasLongestRoadBonus = true;
+                    AddVictoryPoint(player, 2);
+                    UnityEngine.Debug.Log("<color=orange>Portocaliu a primit bonusul pentru Cel Mai Lung Drum!</color>");
+                }
             }
-            else if (player == MapGenerator.Player.Orange && !orangeHasLongestRoadBonus)
-            {
-                orangeHasLongestRoadBonus = true;
-                AddVictoryPoint(player, 2);
-                UnityEngine.Debug.Log("<color=orange>Portocaliu a primit bonusul pentru Cel Mai Lung Drum!</color>");
-            }
+        }
+        catch (System.Exception ex)
+        {
+            // Am blocat eroarea ca să nu îți mai blocheze jocul!
+            UnityEngine.Debug.LogWarning($"Eroare ignorată la calculul drumului: {ex.Message}");
         }
     }
 }

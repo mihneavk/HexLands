@@ -3,7 +3,6 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using TMPro;
 
 public class OllamaAdvisor : MonoBehaviour
 {
@@ -11,13 +10,14 @@ public class OllamaAdvisor : MonoBehaviour
     public string ollamaUrl = "http://127.0.0.1:11434/api/generate";
     public string modelName = "phi3";
 
-    [Header("Game References")]
-    public GameManager gameManager;
-    public PlayerResourceManager resourceManager;
+    // Nu le mai punem public, le găsim automat din cod!
+    private GameManager gameManager;
+    private PlayerResourceManager resourceManager;
 
-    [Header("UI References")]
-    public TextMeshProUGUI advisorTextDisplay;
-    public GameObject popupPanel;
+    // --- Variabile pentru UI-ul din Cod ---
+    private bool showCodePopup = false;
+    private string codeAdvisorText = "Aștept o întrebare...";
+    // ---------------------------------------
 
     [System.Serializable]
     private class OllamaRequest
@@ -29,17 +29,20 @@ public class OllamaAdvisor : MonoBehaviour
 
     private void Start()
     {
-        if (gameManager == null) gameManager = FindObjectOfType<GameManager>();
-        if (resourceManager == null) resourceManager = FindObjectOfType<PlayerResourceManager>();
+        // Scriptul își caută singur colegii, ZERO efort în Inspector
+        gameManager = FindObjectOfType<GameManager>();
+        resourceManager = FindObjectOfType<PlayerResourceManager>();
+
+        if (gameManager == null) UnityEngine.Debug.LogError("OllamaAdvisor: Nu găsesc GameManager în scenă!");
+        if (resourceManager == null) UnityEngine.Debug.LogError("OllamaAdvisor: Nu găsesc PlayerResourceManager în scenă!");
     }
 
     public void AskForRealAdvice()
     {
         if (gameManager == null || resourceManager == null) return;
 
-        if (popupPanel != null) popupPanel.SetActive(true);
-
-        if (advisorTextDisplay != null) advisorTextDisplay.text = "Advisor is thinking...";
+        showCodePopup = true;
+        codeAdvisorText = "Advisor is thinking...";
 
         MapGenerator.Player currentPlayer = gameManager.currentPlayer;
         PlayerResourceManager.ResourceWallet wallet = (currentPlayer == MapGenerator.Player.Blue)
@@ -54,7 +57,6 @@ public class OllamaAdvisor : MonoBehaviour
 
         string boardContext = GetBoardState();
 
-        // AICI AM MODIFICAT PROMPT-UL PENTRU A-L FACE SĂ SCRIE PUȚIN:
         string realPrompt = $"I am playing Catan as the {currentPlayer} player. " +
                             $"My resources are: {wood} Wood, {brick} Brick, " +
                             $"{sheep} Sheep, {wheat} Wheat, and {ore} Ore. " +
@@ -62,11 +64,6 @@ public class OllamaAdvisor : MonoBehaviour
                             "What is the best move? Answer strictly in 1 or 2 short sentences in English. Do not write long explanations. Be extremely brief.";
 
         StartCoroutine(SendRequestToOllama(realPrompt));
-    }
-
-    public void ClosePopup()
-    {
-        if (popupPanel != null) popupPanel.SetActive(false);
     }
 
     private string GetBoardState()
@@ -133,14 +130,13 @@ public class OllamaAdvisor : MonoBehaviour
         {
             string errorMsg = $"Ollama Error: {request.error}\nServer replied: {request.downloadHandler.text}";
             UnityEngine.Debug.LogError(errorMsg);
-            if (advisorTextDisplay != null) advisorTextDisplay.text = "Eroare! Vezi consola.";
+            codeAdvisorText = "Eroare de conexiune la Ollama! Asigură-te că aplicația rulează în fundal.";
         }
         else
         {
             string responseText = request.downloadHandler.text;
             string advice = ExtractResponseFromJson(responseText);
-
-            if (advisorTextDisplay != null) advisorTextDisplay.text = advice;
+            codeAdvisorText = advice;
         }
     }
 
@@ -157,5 +153,46 @@ public class OllamaAdvisor : MonoBehaviour
             return extracted.Replace("\\n", "\n").Replace("\\\"", "\"").Replace("\\r", "");
         }
         return "Could not read the response.";
+    }
+
+    // ==========================================
+    // UI 100% DIN COD - NU DEPINDEM DE IERARHIE
+    // ==========================================
+    private void OnGUI()
+    {
+        // 1. Butonul mereu vizibil pe ecran
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+        buttonStyle.fontSize = 16;
+        buttonStyle.fontStyle = FontStyle.Bold;
+
+        // AM SCHIMBAT Y din 100 în 300 PENTRU A-L COBORA MAI JOS
+        // (X = dreapta ecranului - 220, Y = 400 de sus în jos, Lățime = 200, Înălțime = 50)
+        if (GUI.Button(new Rect(Screen.width - 220, 400, 200, 50), "Ask AI Advisor", buttonStyle))
+        {
+            AskForRealAdvice();
+        }
+
+        // 2. Fereastra de Popup (apare doar după ce ai dat click)
+        if (showCodePopup)
+        {
+            GUI.Window(0, new Rect(Screen.width / 2 - 250, Screen.height / 2 - 150, 500, 300), DrawCodePopup, "Ollama Phi-3 Advisor");
+        }
+    }
+
+    private void DrawCodePopup(int windowID)
+    {
+        GUIStyle textStyle = new GUIStyle(GUI.skin.label);
+        textStyle.fontSize = 16;
+        textStyle.wordWrap = true;
+
+        GUI.Label(new Rect(20, 40, 460, 200), codeAdvisorText, textStyle);
+
+        GUIStyle closeButtonStyle = new GUIStyle(GUI.skin.button);
+        closeButtonStyle.fontSize = 14;
+
+        if (GUI.Button(new Rect(200, 250, 100, 40), "Închide", closeButtonStyle))
+        {
+            showCodePopup = false;
+        }
     }
 }
