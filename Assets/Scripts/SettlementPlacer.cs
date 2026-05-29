@@ -1,146 +1,177 @@
 ﻿using UnityEngine;
+using System;
 
 public class SettlementPlacer : MonoBehaviour
 {
     public GameObject settlementPrefab;
 
-    // Stări pentru a ști ce vrea jucătorul să construiască
     public enum BuildMode { None, PlacingSettlement, PlacingRoad, PlacingCity }
     public BuildMode currentMode = BuildMode.None;
 
     [Header("Road Building Logic")]
-    public int roadsRemainingFromCard = 0; // Câte drumuri gratis mai avem
+    public int roadsRemainingFromCard = 0;
 
-    public void ActivateRoadBuildingCard()
+    private bool AreSameLocation(UnityEngine.Component obj1, UnityEngine.Component obj2)
     {
-        roadsRemainingFromCard = 2;
-        currentMode = BuildMode.PlacingRoad; // Intram în modul de plasare drum
-        SetVisualsVisibility(); // Activăm punctele de drum (muchiile)
-        Debug.Log($"[SettlementPlacer] CARTE ACTIVATĂ pe instanța: {gameObject.name} | ID: {gameObject.GetInstanceID()}, ROADBUILDING");
+        if (obj1 == null || obj2 == null) return false;
+        return Vector2.Distance(obj1.transform.position, obj2.transform.position) < 0.5f;
     }
 
-    public void ActivateCityMode()
+    private bool HasRoadConnected(HexCorner corner, MapGenerator.Player player)
     {
-        if (!CanBuildNow()) return; // Verifică hasRolled
-        currentMode = BuildMode.PlacingCity;
-        SetVisualsVisibility();
-    }
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+        if (mg == null || mg.allEdges == null) return false;
 
-    public void ActivateSettlementMode() {
-        GameManager gm = FindObjectOfType<GameManager>();
-        if (!gm.hasRolled && gm.currentPhase != GameManager.GamePhase.Setup)
+        foreach (HexEdge e in mg.allEdges)
         {
-            Debug.LogWarning("Dă cu zarul mai întâi!");
-            return;
+            if (e != null && e.isOccupied && e.owner == player)
+            {
+                if (AreSameLocation(e.corner1, corner) || AreSameLocation(e.corner2, corner))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private bool CanBuildRoadHere(HexEdge edge, MapGenerator.Player player, bool isSetupPhase, HexCorner lastSettlement)
+    {
+        if (edge == null || edge.isOccupied) return false;
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+        if (mg == null) return false;
+
+        if (isSetupPhase)
+        {
+            if (lastSettlement != null && lastSettlement.owner == player)
+            {
+                if (AreSameLocation(edge.corner1, lastSettlement) || AreSameLocation(edge.corner2, lastSettlement))
+                    return true;
+            }
+            return false;
         }
 
-        currentMode = BuildMode.PlacingSettlement; SetVisualsVisibility(); }
-    public void ActivateRoadMode() {
-        GameManager gm = FindObjectOfType<GameManager>();
-        if (!gm.hasRolled && gm.currentPhase != GameManager.GamePhase.Setup)
+        foreach (HexCorner c in mg.allCorners)
         {
-            Debug.LogWarning("Dă cu zarul mai întâi!");
-            return;
+            if (c != null && c.isOccupied && c.owner == player)
+            {
+                if (AreSameLocation(edge.corner1, c) || AreSameLocation(edge.corner2, c))
+                    return true;
+            }
         }
 
-        currentMode = BuildMode.PlacingRoad; SetVisualsVisibility();
-        Debug.Log("SUNTEM IN ROADMODE");
+        foreach (HexEdge otherEdge in mg.allEdges)
+        {
+            if (otherEdge != null && otherEdge.isOccupied && otherEdge.owner == player)
+            {
+                UnityEngine.Component sharedPos = null;
+                if (AreSameLocation(otherEdge.corner1, edge.corner1) || AreSameLocation(otherEdge.corner2, edge.corner1))
+                    sharedPos = edge.corner1;
+                else if (AreSameLocation(otherEdge.corner1, edge.corner2) || AreSameLocation(otherEdge.corner2, edge.corner2))
+                    sharedPos = edge.corner2;
+
+                if (sharedPos != null)
+                {
+                    bool blocked = false;
+                    foreach (HexCorner c in mg.allCorners)
+                    {
+                        if (c != null && AreSameLocation(c, sharedPos))
+                        {
+                            if (c.isOccupied && c.owner != player)
+                            {
+                                blocked = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!blocked) return true;
+                }
+            }
+        }
+        return false;
     }
+
+    public void ActivateRoadBuildingCard() { roadsRemainingFromCard = 2; currentMode = BuildMode.PlacingRoad; SetVisualsVisibility(); }
+    public void ActivateCityMode() { if (!CanBuildNow()) return; currentMode = BuildMode.PlacingCity; SetVisualsVisibility(); }
+    public void ActivateSettlementMode() { currentMode = BuildMode.PlacingSettlement; SetVisualsVisibility(); }
+    public void ActivateRoadMode() { currentMode = BuildMode.PlacingRoad; SetVisualsVisibility(); }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Debug.Log($"[SettlementPlacer] Click detectat pe instanța: {gameObject.name} | ID: {gameObject.GetInstanceID()} | Roads: {roadsRemainingFromCard}");
+            // RADARUL: Aflăm de ce te blochezi
+            if (currentMode == BuildMode.None)
+            {
+                UnityEngine.Debug.Log("❌ CLICK IGNORAT: Jocul este în modul 'None' (Pauză). Așteaptă o comandă de la joc sau apasă un buton de construcție!");
+                return;
+            }
+
+            if (Camera.main == null)
+            {
+                UnityEngine.Debug.LogError("🚨 EROARE: Nu găsesc Camera! Asigură-te că obiectul camerei din ierarhie are tag-ul 'MainCamera'.");
+                return;
+            }
+
             GameManager gm = FindObjectOfType<GameManager>();
             PlayerResourceManager resManager = FindObjectOfType<PlayerResourceManager>();
+            if (gm == null) return;
+
             bool isSetup = (gm.currentPhase == GameManager.GamePhase.Setup);
 
-            // Dacă NU suntem în setup și NU am apăsat un buton de construcție, oprim click-ul
-            if (!isSetup && currentMode == BuildMode.None) return;
+            RaycastHit2D[] hits = Physics2D.RaycastAll(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-            RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-            if (hit.collider == null) return;
-
-            // --- PLASARE CASĂ ---
-            if (hit.collider.CompareTag("Corner") && (isSetup || currentMode == BuildMode.PlacingSettlement))
+            if (hits.Length == 0)
             {
-                HexCorner corner = hit.collider.GetComponent<HexCorner>();
-                if (corner.IsValidForSettlement())
-                {
-                    InstantiateHouse(corner, gm);
-                    //ActivateRoadMode();
-
-                    if (!isSetup)
-                    {
-                        resManager.SpendForSettlement(gm.currentPlayer);
-                        currentMode = BuildMode.None; // Ieșim din modul de construire
-                        SetVisualsVisibility();
-                        FindObjectOfType<BuildUIManager>().RefreshButtons(); // Actualizăm UI
-                    }
-                }
+                UnityEngine.Debug.LogWarning("⚠️ Ai dat click pe un loc gol sau îți blochează ceva interfața UI!");
+                return;
             }
 
-            // --- PLASARE DRUM ---
-            else if (hit.collider.CompareTag("Edge") && (isSetup || currentMode == BuildMode.PlacingRoad))
+            foreach (var hit in hits)
             {
-                HexEdge edge = hit.collider.GetComponent<HexEdge>();
-                Debug.Log("AM LOVIT EDGE");
-                if (!edge.isOccupied)
+                if (hit.collider == null) continue;
+
+                if (hit.collider.CompareTag("Corner") && currentMode == BuildMode.PlacingSettlement)
                 {
-                    // CAZUL 1: Folosim cardul Road Building
-                    if (roadsRemainingFromCard > 0)
+                    HexCorner corner = hit.collider.GetComponent<HexCorner>();
+                    if (corner != null && !corner.isOccupied && corner.IsValidForSettlement() && (isSetup || HasRoadConnected(corner, gm.currentPlayer)))
                     {
-                        Debug.LogWarning("Suntem Pe ramura buna");
-                        edge.BuildRoad(true); // Îi spunem că e GRATIS
-                        roadsRemainingFromCard--;
+                        if (settlementPrefab == null)
+                        {
+                            UnityEngine.Debug.LogError("🚨 EROARE CRITICĂ: Nu ai pus modelul casei în căsuța 'Settlement Prefab' a scriptului SettlementPlacer!");
+                            return;
+                        }
 
-                        if (roadsRemainingFromCard > 0)
-                        {
-                            // Mai are un drum de pus! Rămânem în acest mod.
-                            Debug.Log("Mai ai un drum gratis de pus.");
-                            currentMode = BuildMode.PlacingRoad;
-                        }
-                        else
-                        {
-                            // S-au terminat ambele drumuri de la carte
-                            Debug.LogWarning("Intru pe ramura de PLATA pentru ca roadsRemainingFromCard este: " + roadsRemainingFromCard);
-                            currentMode = BuildMode.None;
-                            SetVisualsVisibility();
-                            // Abia acum anunțăm GameManager că am terminat tura de construcție
-                            gm.OnRoadFinished();
-                        }
-                        // Dacă roadsRemainingFromCard este încă 1, rămânem în PlacingRoad
-                    }
-                    // CAZUL 2: Construcție normală sau Setup
-                    else
-                    {
-                        Debug.LogWarning("NU Suntem Pe ramura buna");
-                        edge.BuildRoad(false); // Costă resurse (sau e Setup)
-
-                        if (!isSetup)
-                        {
-                            currentMode = BuildMode.None;
-                            SetVisualsVisibility();
-                        }
+                        InstantiateHouse(corner, gm);
+                        if (!isSetup) { if (resManager != null) resManager.SpendForSettlement(gm.currentPlayer); currentMode = BuildMode.None; SetVisualsVisibility(); }
+                        return;
                     }
                 }
-            }
-
-            else if (hit.collider.CompareTag("Corner") && currentMode == BuildMode.PlacingCity)
-            {
-                HexCorner corner = hit.collider.GetComponent<HexCorner>();
-
-                // REGULĂ: Trebuie să fie casa TA și să NU fie deja oraș
-                if (corner.isOccupied && corner.owner == gm.currentPlayer && !corner.isCity)
+                else if (hit.collider.CompareTag("Edge") && currentMode == BuildMode.PlacingRoad)
                 {
-                    corner.UpgradeToCity();
-                    FindObjectOfType<PlayerResourceManager>().SpendForCity(gm.currentPlayer);
-                    gm.AddVictoryPoint(gm.currentPlayer, 1); // Orașul valorează 2 puncte (casa avea deja 1)
+                    HexEdge edge = hit.collider.GetComponent<HexEdge>();
+                    if (edge != null && !edge.isOccupied && CanBuildRoadHere(edge, gm.currentPlayer, isSetup, gm.lastPlacedSettlement))
+                    {
+                        edge.BuildRoad(roadsRemainingFromCard > 0);
+                        if (roadsRemainingFromCard > 0) roadsRemainingFromCard--;
 
-                    currentMode = BuildMode.None;
-                    SetVisualsVisibility();
-                    FindObjectOfType<BuildUIManager>().RefreshButtons();
+                        if (roadsRemainingFromCard == 0 || isSetup) { currentMode = BuildMode.None; SetVisualsVisibility(); gm.OnRoadFinished(); }
+                        else { if (resManager != null) resManager.SpendForRoad(gm.currentPlayer); currentMode = BuildMode.None; SetVisualsVisibility(); }
+
+                        if (FindObjectOfType<BuildUIManager>() != null) FindObjectOfType<BuildUIManager>().RefreshButtons();
+                        return;
+                    }
+                }
+                else if (hit.collider.CompareTag("Corner") && currentMode == BuildMode.PlacingCity)
+                {
+                    HexCorner corner = hit.collider.GetComponent<HexCorner>();
+                    if (corner != null && corner.isOccupied && corner.owner == gm.currentPlayer && !corner.isCity)
+                    {
+                        corner.UpgradeToCity();
+                        if (resManager != null) resManager.SpendForCity(gm.currentPlayer);
+                        gm.AddVictoryPoint(gm.currentPlayer, 1);
+                        currentMode = BuildMode.None; SetVisualsVisibility();
+                        if (FindObjectOfType<BuildUIManager>() != null) FindObjectOfType<BuildUIManager>().RefreshButtons();
+                        return;
+                    }
                 }
             }
         }
@@ -148,124 +179,68 @@ public class SettlementPlacer : MonoBehaviour
 
     public void SetVisualsVisibility()
     {
-        GameManager gm = FindObjectOfType<GameManager>();
-        MapGenerator mg = FindObjectOfType<MapGenerator>();
-        MapGenerator.Player currentPlayer = gm.currentPlayer;
-
-        foreach (HexCorner corner in mg.allCorners)
+        try
         {
-            // --- REPARAREA EROREI ---
-            if (corner == null) continue;
-            // ------------------------
+            GameManager gm = FindObjectOfType<GameManager>();
+            MapGenerator mg = FindObjectOfType<MapGenerator>();
+            if (gm == null || mg == null) return;
 
-            if (currentMode == BuildMode.PlacingSettlement && !corner.isOccupied)
+            MapGenerator.Player currentPlayer = gm.currentPlayer;
+
+            if (mg.allCorners != null)
             {
-                bool isSetup = gm.currentPhase == GameManager.GamePhase.Setup;
-                bool hasConnection = corner.HasAdjacentRoadOfPlayer(currentPlayer);
-
-                // --- LOGICA CORECTATĂ ---
-                // Un punct trebuie să apară DOAR DACĂ:
-                // 1. Este valid conform regulii de distanță (IsValidForSettlement)
-                // ȘI
-                // 2. (Suntem în Setup SAU avem un drum conectat)
-
-                bool canPlaceHere = corner.IsValidForSettlement(); // Verifică vecinii
-                bool hasRequiredConnection = isSetup || hasConnection; // Verifică faza/drumul
-
-                corner.gameObject.SetActive(canPlaceHere && hasRequiredConnection);
-            }
-            else
-            {
-                // Dacă colțul este ocupat, trebuie să rămână ACTIV pentru a vedea casa!
-                if (corner.isOccupied)
-                    corner.gameObject.SetActive(true);
-                else
-                    corner.gameObject.SetActive(false);
-            }
-        }
-
-        foreach (HexEdge edge in mg.allEdges)
-        {
-            if (edge == null) continue;
-
-            if (edge.corner1 == null || edge.corner2 == null)
-            {
-                Debug.LogWarning($"Drumul {edge.gameObject.name} nu are colțurile setate!");
-                continue;
+                foreach (HexCorner c in mg.allCorners)
+                    if (c != null && c.gameObject != null) c.gameObject.SetActive(c.isOccupied);
             }
 
-            if (currentMode == BuildMode.PlacingRoad && !edge.isOccupied)
+            if (mg.allEdges != null)
             {
-                bool canBuild = false;
-                bool isSetup = (gm.currentPhase == GameManager.GamePhase.Setup);
+                foreach (HexEdge e in mg.allEdges)
+                    if (e != null && e.gameObject != null && !e.isOccupied) e.gameObject.SetActive(false);
+            }
 
-
-                if (isSetup)
+            if (currentMode == BuildMode.PlacingSettlement)
+            {
+                if (mg.allCorners != null)
                 {
-                    // --- REGULA STRICTĂ PENTRU SETUP ---
-                    // Drumul trebuie să atingă FIX ultima casă plasată
-                    if (edge.corner1 == gm.lastPlacedSettlement || edge.corner2 == gm.lastPlacedSettlement)
+                    foreach (HexCorner c in mg.allCorners)
                     {
-                        canBuild = true;
-                    }
-                }
-                else
-                {
-                    // --- REGULA PENTRU JOCUL NORMAL ---
-                    // Conectare la orice casă PROPRIE
-                    if ((edge.corner1.isOccupied && edge.corner1.owner == currentPlayer) ||
-                        (edge.corner2.isOccupied && edge.corner2.owner == currentPlayer))
-                    {
-                        canBuild = true;
-                    }
-
-                    // Verificăm dacă drumul atinge un ALT DRUM al jucătorului curent
-                    if (!canBuild && !isSetup)
-                    {
-                        foreach (HexEdge otherEdge in mg.allEdges)
+                        if (c != null && c.gameObject != null && !c.isOccupied && c.IsValidForSettlement())
                         {
-                            // CRITIC: Verificăm otherEdge.isOccupied
-                            if (otherEdge != null && otherEdge.isOccupied && otherEdge.owner == currentPlayer)
-                            {
-                                if (otherEdge.corner1 == edge.corner1 || otherEdge.corner1 == edge.corner2 ||
-                                    otherEdge.corner2 == edge.corner1 || otherEdge.corner2 == edge.corner2)
-                                {
-                                    canBuild = true;
-                                    break;
-                                }
-                            }
+                            if (gm.currentPhase == GameManager.GamePhase.Setup || HasRoadConnected(c, currentPlayer))
+                                c.gameObject.SetActive(true);
                         }
                     }
                 }
-
-                // Activăm/Dezactivăm în funcție de canBuild
-                if (canBuild) edge.ShowPotentialPath();
-                else edge.gameObject.SetActive(false);
             }
-            else
+            else if (currentMode == BuildMode.PlacingRoad)
             {
-                // Dacă drumul e deja ocupat, trebuie să rămână vizibil (SetActive true), 
-                // dar fără cercul de preview.
-                if (edge.isOccupied)
+                if (mg.allEdges != null)
                 {
-                    edge.gameObject.SetActive(true);
-                    if (edge.previewCircle != null) edge.previewCircle.SetActive(false);
-                }
-                else
-                {
-                    edge.gameObject.SetActive(false);
+                    foreach (HexEdge e in mg.allEdges)
+                    {
+                        if (e != null && e.gameObject != null && !e.isOccupied)
+                        {
+                            if (CanBuildRoadHere(e, currentPlayer, (gm.currentPhase == GameManager.GamePhase.Setup), gm.lastPlacedSettlement))
+                                e.ShowPotentialPath();
+                        }
+                    }
                 }
             }
         }
-
-        // Repetă verificarea de null și pentru mg.allEdges dacă ai o listă similară!
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogError($"Eroare vizuală izolată: {ex.Message}");
+        }
     }
 
     private void InstantiateHouse(HexCorner corner, GameManager gm)
     {
+        if (corner == null || gm == null || settlementPrefab == null) return;
         GameObject newSettlement = Instantiate(settlementPrefab, corner.transform.position, Quaternion.identity);
         corner.visualHouseObject = newSettlement;
-        newSettlement.GetComponent<SpriteRenderer>().sprite = FindObjectOfType<MapGenerator>().GetCurrentHouseSprite();
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+        if (mg != null) newSettlement.GetComponent<SpriteRenderer>().sprite = mg.GetCurrentHouseSprite();
         corner.BuildSettlement(gm.currentPlayer);
         gm.OnSettlementPlaced(corner);
     }
@@ -274,27 +249,9 @@ public class SettlementPlacer : MonoBehaviour
     {
         GameManager gm = FindObjectOfType<GameManager>();
         MapGenerator mg = FindObjectOfType<MapGenerator>();
-
-        // 1. În faza de Setup, lăsăm jucătorul să construiască mereu (fără zar)
-        if (gm.currentPhase == GameManager.GamePhase.Setup)
-            return true;
-
-        // 2. În faza de Gameplay, verificăm condițiile:
-        // Trebuie să fi dat cu zarul ȘI să nu fie în mijlocul mutării hoțului
-        if (!gm.hasRolled)
-        {
-            Debug.Log("Trebuie să dai cu zarul mai întâi!");
-            return false;
-        }
-
-        if (mg.isMovingRobber)
-        {
-            Debug.Log("Mută hoțul înainte de a construi!");
-            return false;
-        }
-
-        return true; // Dacă a trecut de toate, poate construi!
+        if (gm != null && gm.currentPhase == GameManager.GamePhase.Setup) return true;
+        if (gm != null && !gm.hasRolled) return false;
+        if (mg != null && mg.isMovingRobber) return false;
+        return true;
     }
-
-
 }
