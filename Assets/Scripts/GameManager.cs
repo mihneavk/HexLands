@@ -21,6 +21,10 @@ public class GameManager : MonoBehaviour
 
     public MapGenerator.Player currentPlayer;
 
+    // AICI SUNT VARIABILELE DINAMICE
+    public MapGenerator.Player humanPlayer;
+    public MapGenerator.Player aiPlayer;
+
     private MapGenerator.Player[] setupOrder = {
         MapGenerator.Player.Blue,
         MapGenerator.Player.Orange,
@@ -35,6 +39,19 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // CITIM CE A ALES JUCĂTORUL ÎN MENIU!
+        string colorPref = PlayerPrefs.GetString("HumanColor", "Blue");
+        if (colorPref == "Orange")
+        {
+            humanPlayer = MapGenerator.Player.Orange;
+            aiPlayer = MapGenerator.Player.Blue;
+        }
+        else
+        {
+            humanPlayer = MapGenerator.Player.Blue;
+            aiPlayer = MapGenerator.Player.Orange;
+        }
+
         UpdatePointsUI();
         hasRolled = true;
         currentPlayer = setupOrder[0];
@@ -42,6 +59,13 @@ public class GameManager : MonoBehaviour
 
         SettlementPlacer[] placers = FindObjectsOfType<SettlementPlacer>();
         foreach (SettlementPlacer sp in placers) sp.ActivateSettlementMode();
+
+        // Dacă jucătorul 1 (Albastru) este AI-ul, îi dăm startul imediat!
+        if (currentPlayer == aiPlayer)
+        {
+            EnablePlayerControls(false);
+            FindObjectOfType<AIOpponent>().StartAITurn();
+        }
     }
 
     public HexCorner lastPlacedSettlement;
@@ -84,7 +108,7 @@ public class GameManager : MonoBehaviour
         if (setupStep < setupOrder.Length)
         {
             currentPlayer = setupOrder[setupStep];
-            if (currentPlayer == MapGenerator.Player.Orange)
+            if (currentPlayer == aiPlayer)
             {
                 EnablePlayerControls(false);
                 AIOpponent ai = FindObjectOfType<AIOpponent>();
@@ -111,21 +135,24 @@ public class GameManager : MonoBehaviour
 
         if (buildUIManager != null) buildUIManager.RefreshButtons();
         currentPhase = GamePhase.Gameplay;
-        currentPlayer = MapGenerator.Player.Blue;
-
-        EnablePlayerControls(true);
+        currentPlayer = MapGenerator.Player.Blue; // Jocul mereu începe cu Blue, indiferent de cine îl controlează
 
         if (diceController != null)
         {
-            diceController.canRoll = true;
             diceController.ResetDice();
         }
 
-        if (currentPlayer == MapGenerator.Player.Orange)
+        if (currentPlayer == aiPlayer)
         {
             EnablePlayerControls(false);
+            if (diceController != null) diceController.canRoll = false;
             AIOpponent ai = FindObjectOfType<AIOpponent>();
             if (ai != null) ai.StartAITurn();
+        }
+        else
+        {
+            EnablePlayerControls(true);
+            if (diceController != null) diceController.canRoll = true;
         }
     }
 
@@ -153,7 +180,7 @@ public class GameManager : MonoBehaviour
     {
         if (currentPhase == GamePhase.Setup) return;
 
-        if (currentPlayer == MapGenerator.Player.Blue)
+        if (currentPlayer == humanPlayer)
         {
             if (!hasRolled) return;
             MapGenerator mapGen = FindObjectOfType<MapGenerator>();
@@ -174,23 +201,19 @@ public class GameManager : MonoBehaviour
 
         hasRolled = false;
 
-        if (diceController != null)
-        {
-            diceController.canRoll = (currentPlayer == MapGenerator.Player.Blue);
-            diceController.ResetDice();
-        }
-
         if (buildUIManager != null) buildUIManager.RefreshButtons();
 
-        if (currentPlayer == MapGenerator.Player.Orange)
+        if (currentPlayer == aiPlayer)
         {
             EnablePlayerControls(false);
+            if (diceController != null) { diceController.canRoll = false; diceController.ResetDice(); }
             AIOpponent ai = FindObjectOfType<AIOpponent>();
             if (ai != null) ai.StartAITurn();
         }
         else
         {
             EnablePlayerControls(true);
+            if (diceController != null) { diceController.canRoll = true; diceController.ResetDice(); }
         }
     }
 
@@ -207,8 +230,6 @@ public class GameManager : MonoBehaviour
         else if (player == MapGenerator.Player.Orange) orangePoints += amount;
 
         UpdatePointsUI();
-
-        // Verificăm câștigul doar dacă scorul a crescut (evităm situația în care cineva pierde trofeul și câștigă simultan)
         if (amount > 0) CheckForWin(player);
     }
 
@@ -231,16 +252,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // ==========================================
-    // LOGICA NOUĂ PENTRU TRANSFERUL TROFEELOR
-    // ==========================================
     [Header("Trofee: Cel Mai Lung Drum")]
     public MapGenerator.Player longestRoadOwner = MapGenerator.Player.None;
-    public int longestRoadLength = 4; // Minim 5 drumuri pentru a obține trofeul inițial
+    public int longestRoadLength = 4;
 
     [Header("Trofee: Cea Mai Mare Armată")]
     public MapGenerator.Player largestArmyOwner = MapGenerator.Player.None;
-    public int largestArmySize = 2; // Minim 3 cavaleri pentru a obține trofeul inițial
+    public int largestArmySize = 2;
 
     public void CheckLongestRoad(MapGenerator.Player player)
     {
@@ -249,32 +267,21 @@ public class GameManager : MonoBehaviour
             MapGenerator mg = FindObjectOfType<MapGenerator>();
             int length = mg != null ? mg.GetLongestRoadForPlayer(player) : 0;
 
-            // Dacă jucătorul curent a stabilit un nou record (trebuie să fie strict mai mare)
             if (length > longestRoadLength)
             {
                 longestRoadLength = length;
 
-                // Dacă trofeul abia a fost preluat sau furat
                 if (longestRoadOwner != player)
                 {
-                    // Îi luăm punctele jucătorului care a fost depășit (dacă există)
-                    if (longestRoadOwner != MapGenerator.Player.None)
-                    {
-                        AddVictoryPoint(longestRoadOwner, -2);
-                        UnityEngine.Debug.Log($"<color=red>Trofeul 'Drumul' i-a fost furat jucătorului {longestRoadOwner}!</color>");
-                    }
-
-                    // Îi dăm trofeul și punctele noului campion
+                    if (longestRoadOwner != MapGenerator.Player.None) AddVictoryPoint(longestRoadOwner, -2);
                     longestRoadOwner = player;
                     AddVictoryPoint(player, 2);
-                    UnityEngine.Debug.Log($"<color=green>{player} a preluat trofeul 'Cel Mai Lung Drum' ({length})!</color>");
                 }
             }
         }
         catch (System.Exception ex) { }
     }
 
-    // Funcție pregătită pentru Cavaler (o poți apela cu numărul total de cavaleri jucați de un jucător)
     public void CheckLargestArmy(MapGenerator.Player player, int knightsPlayed)
     {
         if (knightsPlayed > largestArmySize)
@@ -283,15 +290,9 @@ public class GameManager : MonoBehaviour
 
             if (largestArmyOwner != player)
             {
-                if (largestArmyOwner != MapGenerator.Player.None)
-                {
-                    AddVictoryPoint(largestArmyOwner, -2);
-                    UnityEngine.Debug.Log($"<color=red>Trofeul 'Armata' i-a fost furat jucătorului {largestArmyOwner}!</color>");
-                }
-
+                if (largestArmyOwner != MapGenerator.Player.None) AddVictoryPoint(largestArmyOwner, -2);
                 largestArmyOwner = player;
                 AddVictoryPoint(player, 2);
-                UnityEngine.Debug.Log($"<color=green>{player} a preluat trofeul 'Cea Mai Mare Armată' ({knightsPlayed})!</color>");
             }
         }
     }
@@ -304,7 +305,6 @@ public class GameManager : MonoBehaviour
         style.alignment = TextAnchor.MiddleCenter;
         style.normal.textColor = Color.white;
 
-        // UI-ul va arăta acum și mărimea actuală a drumului/armatei!
         string roadText = longestRoadOwner != MapGenerator.Player.None ? $"🏆 Cel mai lung drum: {longestRoadOwner} ({longestRoadLength})" : "🏆 Cel mai lung drum: Nimeni";
         string armyText = largestArmyOwner != MapGenerator.Player.None ? $"⚔️ Cea mai mare armată: {largestArmyOwner} ({largestArmySize})" : "⚔️ Cea mai mare armată: Nimeni";
 
@@ -326,9 +326,9 @@ public class GameManager : MonoBehaviour
         string winner = (bluePoints >= pointsToWin) ? "ALBASTRU A CÂȘTIGAT!" : "PORTOCALIU A CÂȘTIGAT!";
         GUI.Label(new Rect(10, 40, 280, 50), winner);
 
-        if (GUI.Button(new Rect(50, 100, 200, 50), "RESTART JOC"))
+        if (GUI.Button(new Rect(50, 100, 200, 50), "MENIU PRINCIPAL"))
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            SceneManager.LoadScene(0); // Acum te întoarce la meniul principal!
         }
     }
 }

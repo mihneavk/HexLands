@@ -14,11 +14,20 @@ public class AIOpponent : MonoBehaviour
 
     private Dictionary<HexCorner, List<HexData>> currentCornerHexMap;
 
+    private MapGenerator.Player humanColor;
+
     void Start()
     {
         gm = FindObjectOfType<GameManager>();
         mg = FindObjectOfType<MapGenerator>();
         resManager = FindObjectOfType<PlayerResourceManager>();
+
+        // CITIM CULOAREA ȘI NE ADAPTĂM
+        string colorPref = PlayerPrefs.GetString("HumanColor", "Blue");
+
+        // Dacă omul a ales Portocaliu, AI-ul devine automat Albastru, și viceversa
+        aiColor = (colorPref == "Orange") ? MapGenerator.Player.Blue : MapGenerator.Player.Orange;
+        humanColor = (aiColor == MapGenerator.Player.Orange) ? MapGenerator.Player.Blue : MapGenerator.Player.Orange;
     }
 
     public void StartAITurn()
@@ -187,12 +196,10 @@ public class AIOpponent : MonoBehaviour
 
             yield return new WaitForSeconds(thinkingTime);
 
-            // BUG REZOLVAT AICI: Salvăm dacă a acționat pentru a nu închide bucla prematur
             bool cardPlayed = TryPlayDevCard();
             bool traded = TryBankTrade();
             bool built = EvaluateAndExecuteBestAction();
 
-            // Dacă a făcut oricare dintre aceste acțiuni, considerăm că mai poate muta
             canStillAct = cardPlayed || traded || built;
         }
 
@@ -215,7 +222,6 @@ public class AIOpponent : MonoBehaviour
             if (hex.hasRobber || hex.resourceType == HexData.ResourceType.Desert) continue;
 
             float maliceScore = 0f;
-            // Șansa de a pica (Vânează 6, 8, 5, 9)
             float hexYieldProb = GetDiceProbability(hex.tokenNumber);
 
             bool hurtsMe = false;
@@ -226,7 +232,7 @@ public class AIOpponent : MonoBehaviour
                 if (corner.isOccupied)
                 {
                     if (corner.owner == aiColor) hurtsMe = true;
-                    if (corner.owner == MapGenerator.Player.Blue)
+                    if (corner.owner == humanColor) // Acum vizează culoarea omului!
                     {
                         hurtsEnemy = true;
                         maliceScore += hexYieldProb * (corner.isCity ? 2f : 1f);
@@ -234,13 +240,11 @@ public class AIOpponent : MonoBehaviour
                 }
             }
 
-            // REGULA 1: Evită complet să-și blocheze propriile sate!
             if (hurtsMe)
             {
                 maliceScore -= 10000f;
             }
 
-            // REGULA 2: Dacă atacă inamicul, favorizează numerele care ies des!
             if (hurtsEnemy && !hurtsMe)
             {
                 maliceScore += hexYieldProb * 10f;
@@ -272,7 +276,7 @@ public class AIOpponent : MonoBehaviour
         int ore = resManager.GetResourceCount(aiColor, HexData.ResourceType.Ore);
         int totalCards = wood + brick + sheep + wheat + ore;
 
-        int currentVPs = gm.orangePoints;
+        int currentVPs = (aiColor == MapGenerator.Player.Blue) ? gm.bluePoints : gm.orangePoints;
         float currentYield = CalculateTotalExpectedYield();
 
         float bestScore = EvaluateState(currentVPs, currentYield, totalCards);
@@ -395,11 +399,11 @@ public class AIOpponent : MonoBehaviour
     }
 
     // ==========================================
-    // LOGICA NOUĂ PENTRU YEAR OF PLENTY
+    // LOGICA NOUĂ PENTRU YEAR OF PLENTY ȘI CĂRȚI
     // ==========================================
     private bool TryPlayDevCard()
     {
-        var wallet = resManager.orangePlayer;
+        var wallet = (aiColor == MapGenerator.Player.Blue) ? resManager.bluePlayer : resManager.orangePlayer;
         if (wallet.devCards.Count == 0) return false;
 
         DevCardManager devManager = FindObjectOfType<DevCardManager>();
@@ -414,7 +418,6 @@ public class AIOpponent : MonoBehaviour
             int wood = resManager.GetResourceCount(aiColor, HexData.ResourceType.Wood);
             int brick = resManager.GetResourceCount(aiColor, HexData.ResourceType.Brick);
 
-            // AI-ul alege doar ce îi trebuie!
             if (ore >= 1 && wheat >= 1)
             {
                 resManager.AddResource(aiColor, HexData.ResourceType.Ore, 1);
@@ -446,12 +449,12 @@ public class AIOpponent : MonoBehaviour
 
             foreach (var t in allTypes)
             {
-                int amt = resManager.GetResourceCount(MapGenerator.Player.Blue, t);
+                int amt = resManager.GetResourceCount(humanColor, t); // Acum fură fix de la om!
                 if (amt > maxEnemyHas) { maxEnemyHas = amt; bestToSteal = t; }
             }
             if (maxEnemyHas > 0)
             {
-                resManager.RemoveResource(MapGenerator.Player.Blue, bestToSteal, maxEnemyHas);
+                resManager.RemoveResource(humanColor, bestToSteal, maxEnemyHas); // Acum fură fix de la om!
                 resManager.AddResource(aiColor, bestToSteal, maxEnemyHas);
             }
             return true;
@@ -489,7 +492,7 @@ public class AIOpponent : MonoBehaviour
                         if (corner.isOccupied)
                         {
                             if (corner.owner == aiColor) hurtsMe = true;
-                            if (corner.owner == MapGenerator.Player.Blue) hurtsEnemy = true;
+                            if (corner.owner == humanColor) hurtsEnemy = true; // Acum verifică culoarea omului!
                         }
                     }
 
