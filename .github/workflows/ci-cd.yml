@@ -12,13 +12,11 @@ jobs:
     name: Run Unity Unit Tests 
     runs-on: ubuntu-latest
     steps:
-      # 1. Descarcă codul din Git
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      # 2. Caching pentru librării
       - name: Cache Library Folder
         uses: actions/cache@v4
         with:
@@ -26,25 +24,15 @@ jobs:
           key: Library-${{ hashFiles('ProjectSettings/ProjectVersion.txt') }}
           restore-keys: Library-
 
-      # 3. Autentificarea oficială în Unity Hub (Versiunea v4)
-      - name: Login to Unity
-        uses: game-ci/unity-login@v4
-        with:
-          unityEmail: ${{ secrets.UNITY_EMAIL }}
-          unityPassword: ${{ secrets.UNITY_PASSWORD }}
-
-      # 4. Rulează Testele prin GameCI
       - name: Run Tests
         uses: game-ci/unity-test-runner@v4
         id: tests
         env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           unityVersion: auto 
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Salvează rezultatele testelor
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
@@ -52,7 +40,7 @@ jobs:
           name: Test-Results
           path: ${{ steps.tests.outputs.artifactsPath }}
 
-  # STAGIUL 2: COMPILAREA JOCULUI (BUILD)
+  # STAGIUL 2: COMPILAREA JOCULUI (BUILD) - Rulează doar dacă trec testele
   build-game:
     name: Build HexLands Game 
     needs: run-unit-tests
@@ -70,24 +58,14 @@ jobs:
           key: Library-Build-${{ hashFiles('ProjectSettings/ProjectVersion.txt') }}
           restore-keys: Library-Build-
 
-      # Autentificare și la Build (v4)
-      - name: Login to Unity for Build
-        uses: game-ci/unity-login@v4
-        with:
-          unityEmail: ${{ secrets.UNITY_EMAIL }}
-          unityPassword: ${{ secrets.UNITY_PASSWORD }}
-
-      # Construiește executabilul de Windows
       - name: Build Game
         uses: game-ci/unity-builder@v4
         env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           unityVersion: auto
           targetPlatform: StandaloneWindows64
 
-      # Salvează executabilul final
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
