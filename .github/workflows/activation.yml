@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: game-ci/unity-request-activation-file@v4
+      - uses: game-ci/unity-request-activation-file@v3
         id: get-alf
         with:
           unityVersion: auto
