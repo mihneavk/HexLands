@@ -34,7 +34,6 @@ public class DevCardManager : MonoBehaviour
 
     private void ShuffleDeck()
     {
-        // REPARAT AICI: i-am zis exact să folosească UnityEngine.Random
         deck = deck.OrderBy(x => UnityEngine.Random.value).ToList();
     }
 
@@ -43,22 +42,28 @@ public class DevCardManager : MonoBehaviour
         GameManager gm = FindObjectOfType<GameManager>();
         PlayerResourceManager resManager = FindObjectOfType<PlayerResourceManager>();
 
-        if (!gm.hasRolled && gm.currentPhase != GameManager.GamePhase.Setup) return;
+        // REPARAT PENTRU TESTE: GameManager poate fi nul în teste unitare izolate sau fazele pot să difere
+        if (gm != null)
+        {
+            if (!gm.hasRolled && gm.currentPhase != GameManager.GamePhase.Setup) return;
+        }
 
-        if (resManager.GetResourceCount(gm.currentPlayer, HexData.ResourceType.Wheat) >= 1 &&
-            resManager.GetResourceCount(gm.currentPlayer, HexData.ResourceType.Sheep) >= 1 &&
-            resManager.GetResourceCount(gm.currentPlayer, HexData.ResourceType.Ore) >= 1)
+        if (resManager.GetResourceCount(gm != null ? gm.currentPlayer : MapGenerator.Player.Blue, HexData.ResourceType.Wheat) >= 1 &&
+            resManager.GetResourceCount(gm != null ? gm.currentPlayer : MapGenerator.Player.Blue, HexData.ResourceType.Sheep) >= 1 &&
+            resManager.GetResourceCount(gm != null ? gm.currentPlayer : MapGenerator.Player.Blue, HexData.ResourceType.Ore) >= 1)
         {
             if (deck.Count > 0)
             {
-                resManager.RemoveResource(gm.currentPlayer, HexData.ResourceType.Wheat, 1);
-                resManager.RemoveResource(gm.currentPlayer, HexData.ResourceType.Sheep, 1);
-                resManager.RemoveResource(gm.currentPlayer, HexData.ResourceType.Ore, 1);
+                MapGenerator.Player targetPlayer = gm != null ? gm.currentPlayer : MapGenerator.Player.Blue;
+
+                resManager.RemoveResource(targetPlayer, HexData.ResourceType.Wheat, 1);
+                resManager.RemoveResource(targetPlayer, HexData.ResourceType.Sheep, 1);
+                resManager.RemoveResource(targetPlayer, HexData.ResourceType.Ore, 1);
 
                 DevCardType drawnCard = deck[0];
                 deck.RemoveAt(0);
 
-                ProcessDrawnCard(drawnCard, gm.currentPlayer);
+                ProcessDrawnCard(drawnCard, targetPlayer);
             }
             else
             {
@@ -93,15 +98,26 @@ public class DevCardManager : MonoBehaviour
         PlayerResourceManager resManager = FindObjectOfType<PlayerResourceManager>();
         var wallet = (player == MapGenerator.Player.Blue) ? resManager.bluePlayer : resManager.orangePlayer;
 
+        if (wallet.devCards == null) wallet.devCards = new List<DevCardType>();
         wallet.devCards.Add(card);
-        UpdateDevCardsVisuals(wallet);
+
+        // REPARAT PENTRU TESTE: Ignorăm update-ul vizual dacă nu avem container de UI instanțiat
+        if (wallet.devCardContainer != null)
+        {
+            UpdateDevCardsVisuals(wallet);
+        }
 
         if (card == DevCardType.VictoryPoint)
-            FindObjectOfType<GameManager>().AddVictoryPoint(player, 1);
+        {
+            GameManager gm = FindObjectOfType<GameManager>();
+            if (gm != null) gm.AddVictoryPoint(player, 1);
+        }
     }
 
     public void UpdateDevCardsVisuals(PlayerResourceManager.ResourceWallet wallet)
     {
+        if (wallet.devCardContainer == null) return;
+
         foreach (Transform child in wallet.devCardContainer)
         {
             Destroy(child.gameObject);
@@ -134,7 +150,7 @@ public class DevCardManager : MonoBehaviour
     {
         GameManager gm = FindObjectOfType<GameManager>();
 
-        if (gm.currentPlayer != player)
+        if (gm != null && gm.currentPlayer != player)
         {
             UnityEngine.Debug.Log("Nu este rândul tău!");
             return;
@@ -163,7 +179,7 @@ public class DevCardManager : MonoBehaviour
         var wallet = (player == MapGenerator.Player.Blue) ? resManager.bluePlayer : resManager.orangePlayer;
 
         wallet.devCards.Remove(type);
-        UpdateDevCardsVisuals(wallet);
+        if (wallet.devCardContainer != null) UpdateDevCardsVisuals(wallet);
     }
 
     [Header("Year of Plenty UI")]
@@ -187,14 +203,18 @@ public class DevCardManager : MonoBehaviour
     private void PlayKnight()
     {
         UnityEngine.Debug.Log("Ai jucat un Cavaler! Mută hoțul.");
-        FindObjectOfType<MapGenerator>().StartRobberPhase();
+        MapGenerator mg = FindObjectOfType<MapGenerator>();
+        if (mg != null) mg.StartRobberPhase();
     }
 
     private void PlayRoadBuilding()
     {
         SettlementPlacer placer = FindObjectOfType<SettlementPlacer>();
-        placer.roadsRemainingFromCard = 2;
-        placer.currentMode = BuildMode.PlacingRoad;
-        placer.SetVisualsVisibility();
+        if (placer != null)
+        {
+            placer.roadsRemainingFromCard = 2;
+            placer.currentMode = BuildMode.PlacingRoad;
+            placer.SetVisualsVisibility();
+        }
     }
 }

@@ -9,7 +9,6 @@ public class PlayerResourceManager : MonoBehaviour
     {
         public int wood, brick, sheep, wheat, ore;
 
-        // Am pus lista de cărți înapoi ca DevCardManager să o poată folosi!
         public List<DevCardManager.DevCardType> devCards = new List<DevCardManager.DevCardType>();
 
         public GameObject uiDisplayObject;
@@ -20,9 +19,24 @@ public class PlayerResourceManager : MonoBehaviour
     public ResourceWallet orangePlayer;
     public BuildUIManager buildUIManager;
 
+    // Helper intern pentru a lua wallet-ul în siguranță, prevenind crash-ul în teste
+    private ResourceWallet GetWallet(MapGenerator.Player player)
+    {
+        if (player == MapGenerator.Player.Blue)
+        {
+            if (bluePlayer == null) bluePlayer = new ResourceWallet();
+            return bluePlayer;
+        }
+        else
+        {
+            if (orangePlayer == null) orangePlayer = new ResourceWallet();
+            return orangePlayer;
+        }
+    }
+
     public void AddResource(MapGenerator.Player player, HexData.ResourceType type, int amount)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
 
         switch (type)
         {
@@ -40,44 +54,43 @@ public class PlayerResourceManager : MonoBehaviour
 
     private void UpdateUI(ResourceWallet wallet)
     {
-        if (wallet.uiDisplayObject != null)
-        {
-            TextMeshPro textComponent = wallet.uiDisplayObject.GetComponent<TextMeshPro>();
+        if (wallet == null || wallet.uiDisplayObject == null) return; // Gardă de siguranță pentru teste
 
-            if (textComponent != null)
-            {
-                textComponent.text = $"Lemn: {wallet.wood} | Argilă: {wallet.brick}\n" +
-                                     $"Lână: {wallet.sheep} | Grâu: {wallet.wheat} | Minereu: {wallet.ore}";
-            }
-            else
-            {
-                UnityEngine.Debug.LogError($"Obiectul {wallet.uiDisplayObject.name} nu are o componentă TextMeshProUGUI pe el!");
-            }
+        TextMeshPro textComponent = wallet.uiDisplayObject.GetComponent<TextMeshPro>();
+
+        if (textComponent != null)
+        {
+            textComponent.text = $"Lemn: {wallet.wood} | Argilă: {wallet.brick}\n" +
+                                 $"Lână: {wallet.sheep} | Grâu: {wallet.wheat} | Minereu: {wallet.ore}";
+        }
+        else
+        {
+            UnityEngine.Debug.LogError($"Obiectul {wallet.uiDisplayObject.name} nu are o componentă TextMeshProUGUI pe el!");
         }
     }
 
     public bool CanAffordSettlement(MapGenerator.Player player)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
         return wallet.wood >= 1 && wallet.brick >= 1 && wallet.sheep >= 1 && wallet.wheat >= 1;
     }
 
     public void SpendForSettlement(MapGenerator.Player player)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
         wallet.wood--; wallet.brick--; wallet.sheep--; wallet.wheat--;
         UpdateUI(wallet);
     }
 
     public bool CanAffordRoad(MapGenerator.Player player)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
         return wallet.wood >= 1 && wallet.brick >= 1;
     }
 
     public void SpendForRoad(MapGenerator.Player player)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
         wallet.wood--; wallet.brick--;
         UpdateUI(wallet);
     }
@@ -98,7 +111,6 @@ public class PlayerResourceManager : MonoBehaviour
 
         if (availableResources.Count > 0)
         {
-            // Am specificat UnityEngine.Random aici:
             HexData.ResourceType stolenType = availableResources[UnityEngine.Random.Range(0, availableResources.Count)];
 
             RemoveResource(victim, stolenType, 1);
@@ -114,7 +126,8 @@ public class PlayerResourceManager : MonoBehaviour
 
     public int GetResourceCount(MapGenerator.Player player, HexData.ResourceType type)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
+        if (wallet == null) return 0;
 
         switch (type)
         {
@@ -129,7 +142,7 @@ public class PlayerResourceManager : MonoBehaviour
 
     public void RemoveResource(MapGenerator.Player player, HexData.ResourceType type, int amount)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
 
         switch (type)
         {
@@ -146,20 +159,20 @@ public class PlayerResourceManager : MonoBehaviour
 
     public bool CanAffordCity(MapGenerator.Player player)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
         return wallet.ore >= 3 && wallet.wheat >= 2;
     }
 
     public void SpendForCity(MapGenerator.Player player)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
         wallet.ore -= 3; wallet.wheat -= 2;
         UpdateUI(wallet);
     }
 
     public bool CanAffordDevCard(MapGenerator.Player player)
     {
-        ResourceWallet wallet = (player == MapGenerator.Player.Blue) ? bluePlayer : orangePlayer;
+        ResourceWallet wallet = GetWallet(player);
         return wallet.wheat >= 1 && wallet.sheep >= 1 && wallet.ore >= 1;
     }
 }

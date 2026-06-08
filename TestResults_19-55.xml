@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="33" result="Failed(Child)" total="33" passed="25" failed="8" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.5894621">
+  <test-suite type="TestSuite" id="1059" name="Catan" fullname="Catan" runstate="Runnable" testcasecount="33" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.589462" total="33" passed="25" failed="8" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1054" name="Tests.dll" fullname="/Users/elenaistrate/HexLands/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="33" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.579948" total="33" passed="25" failed="8" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="2880" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestFixture" id="1001" name="BankTradeManagerTests" fullname="BankTradeManagerTests" classname="BankTradeManagerTests" runstate="Runnable" testcasecount="3" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.031509" total="3" passed="2" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1004" name="AttemptTrade_ShouldExecuteSuccessfully_WithCorrectResourceDeduction" fullname="BankTradeManagerTests.AttemptTrade_ShouldExecuteSuccessfully_WithCorrectResourceDeduction" methodname="AttemptTrade_ShouldExecuteSuccessfully_WithCorrectResourceDeduction" classname="BankTradeManagerTests" runstate="Runnable" seed="81210950" result="Failed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.020485" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[  Cele 4 lemne trebuiau extrase din inventar.
+  Expected: 0
+  But was:  4
+]]></message>
+            <stack-trace><![CDATA[at BankTradeManagerTests.AttemptTrade_ShouldExecuteSuccessfully_WithCorrectResourceDeduction () [0x00118] in /Users/elenaistrate/HexLands/Assets/Tests/BankTradeManagerTests.cs:108
+]]></stack-trace>
+          </failure>
+          <output><![CDATA[Jucătorul Blue a primit 4 Wood.
+Nu ai suficiente resurse! -1
+]]></output>
+        </test-case>
+        <test-case id="1002" name="GetBestRateForPlayer_ShouldReturnDefaultRate4_WhenPlayerHasNoHarbors" fullname="BankTradeManagerTests.GetBestRateForPlayer_ShouldReturnDefaultRate4_WhenPlayerHasNoHarbors" methodname="GetBestRateForPlayer_ShouldReturnDefaultRate4_WhenPlayerHasNoHarbors" classname="BankTradeManagerTests" runstate="Runnable" seed="1258589872" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001688" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1003" name="GetBestRateForPlayer_ShouldReturnRate2_WhenPlayerHasSpecificHarbor" fullname="BankTradeManagerTests.GetBestRateForPlayer_ShouldReturnRate2_WhenPlayerHasSpecificHarbor" methodname="GetBestRateForPlayer_ShouldReturnRate2_WhenPlayerHasSpecificHarbor" classname="BankTradeManagerTests" runstate="Runnable" seed="1276456978" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000492" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1005" name="BuildUIManagerTests" fullname="BuildUIManagerTests" classname="BuildUIManagerTests" runstate="Runnable" testcasecount="2" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.035560" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1007" name="RefreshButtons_ShouldEnableButtons_WhenPlayerCanAffordThem" fullname="BuildUIManagerTests.RefreshButtons_ShouldEnableButtons_WhenPlayerCanAffordThem" methodname="RefreshButtons_ShouldEnableButtons_WhenPlayerCanAffordThem" classname="BuildUIManagerTests" runstate="Runnable" seed="1249725450" result="Failed" label="Error" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.009758" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at BuildUIManager.RefreshButtons () [0x00139] in /Users/elenaistrate/HexLands/Assets/Scripts/BuildUIManager.cs:39 
+  at BuildUIManagerTests.RefreshButtons_ShouldEnableButtons_WhenPlayerCanAffordThem () [0x00167] in /Users/elenaistrate/HexLands/Assets/Tests/BuildUIManagerTests.cs:92 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <67e9686a86934ae8b0ef7cc81c6b4608>:0 ]]></stack-trace>
+          </failure>
+          <output><![CDATA[Jucătorul Blue a primit 1 Wood.
+Jucătorul Blue a primit 1 Brick.
+Jucătorul Blue a primit 1 Wheat.
+Jucătorul Blue a primit 1 Sheep.
+]]></output>
+        </test-case>
+        <test-case id="1006" name="RefreshButtons_ShouldHideAllButtons_DuringSetupPhase" fullname="BuildUIManagerTests.RefreshButtons_ShouldHideAllButtons_DuringSetupPhase" methodname="RefreshButtons_ShouldHideAllButtons_DuringSetupPhase" classname="BuildUIManagerTests" runstate="Runnable" seed="595282936" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000811" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1008" name="DevCardItemTests" fullname="DevCardItemTests" classname="DevCardItemTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.026350" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1009" name="OnMouseDown_ShouldTriggerUseCard_InDevCardManager" fullname="DevCardItemTests.OnMouseDown_ShouldTriggerUseCard_InDevCardManager" methodname="OnMouseDown_ShouldTriggerUseCard_InDevCardManager" classname="DevCardItemTests" runstate="Runnable" seed="1272209050" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.003340" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Ai jucat un Cavaler! Mută hoțul.
+Avem 7. Pune unde vrei
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1010" name="DevCardManagerTests" fullname="DevCardManagerTests" classname="DevCardManagerTests" runstate="Runnable" testcasecount="2" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.017269" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1012" name="BuyDevelopmentCard_ShouldDeductResources_AndAddCardToWallet_WhenResourcesAreValid" fullname="DevCardManagerTests.BuyDevelopmentCard_ShouldDeductResources_AndAddCardToWallet_WhenResourcesAreValid" methodname="BuyDevelopmentCard_ShouldDeductResources_AndAddCardToWallet_WhenResourcesAreValid" classname="DevCardManagerTests" runstate="Runnable" seed="746898070" result="Failed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.003708" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[  Grâul nu a fost dedus corect.
+  Expected: 0
+  But was:  1
+]]></message>
+            <stack-trace><![CDATA[at DevCardManagerTests.BuyDevelopmentCard_ShouldDeductResources_AndAddCardToWallet_WhenResourcesAreValid () [0x0012c] in /Users/elenaistrate/HexLands/Assets/Tests/DevCardManagerTests.cs:92
+]]></stack-trace>
+          </failure>
+          <output><![CDATA[Jucătorul Blue a primit 1 Wheat.
+Jucătorul Blue a primit 1 Sheep.
+Jucătorul Blue a primit 1 Ore.
+]]></output>
+        </test-case>
+        <test-case id="1011" name="InitializeDeck_ShouldCreateExactly25Cards_WithCorrectDistribution" fullname="DevCardManagerTests.InitializeDeck_ShouldCreateExactly25Cards_WithCorrectDistribution" methodname="InitializeDeck_ShouldCreateExactly25Cards_WithCorrectDistribution" classname="DevCardManagerTests" runstate="Runnable" seed="322711535" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.002031" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1013" name="DiceControllerTests" fullname="DiceControllerTests" classname="DiceControllerTests" runstate="Runnable" testcasecount="2" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.020236" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1014" name="ResetDice_ShouldClearHasRolledFlag_AndRestoreFullAlpha" fullname="DiceControllerTests.ResetDice_ShouldClearHasRolledFlag_AndRestoreFullAlpha" methodname="ResetDice_ShouldClearHasRolledFlag_AndRestoreFullAlpha" classname="DiceControllerTests" runstate="Runnable" seed="2027937667" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.002013" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1015" name="RollAnimation_ShouldCalculateTotalResult_AndBlockFurtherRolls" fullname="DiceControllerTests.RollAnimation_ShouldCalculateTotalResult_AndBlockFurtherRolls" methodname="RollAnimation_ShouldCalculateTotalResult_AndBlockFurtherRolls" classname="DiceControllerTests" runstate="Runnable" seed="30236517" result="Failed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.014063" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[Unhandled log message: '[Assert] Assertion failed on expression: 'ShouldRunBehaviour()''. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+            <stack-trace><![CDATA[UnityEngine.MonoBehaviour:StartCoroutine (string)
+DiceControllerTests/<RollAnimation_ShouldCalculateTotalResult_AndBlockFurtherRolls>d__1:MoveNext () (at Assets/Tests/DiceControllerTests.cs:74)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+]]></stack-trace>
+          </failure>
+          <output><![CDATA[Assertion failed on expression: 'ShouldRunBehaviour()'
+Assertion failed on expression: 'ShouldRunBehaviour()'
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1016" name="DiscardManagerTests" fullname="DiscardManagerTests" classname="DiscardManagerTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.003814" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1018" name="DiscardForAI_ShouldPrioritizeSheepOverOtherResources" fullname="DiscardManagerTests.DiscardForAI_ShouldPrioritizeSheepOverOtherResources" methodname="DiscardForAI_ShouldPrioritizeSheepOverOtherResources" classname="DiscardManagerTests" runstate="Runnable" seed="1150477355" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001011" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[<color=orange>[Utility AI]</color> Aoleu, am 4 cărți! Arunc 2 ca să scap de hoț...
+]]></output>
+        </test-case>
+        <test-case id="1017" name="HandleRuleOf7_ShouldCalculateCorrectSurplus_ForHumanAndAI" fullname="DiscardManagerTests.HandleRuleOf7_ShouldCalculateCorrectSurplus_ForHumanAndAI" methodname="HandleRuleOf7_ShouldCalculateCorrectSurplus_ForHumanAndAI" classname="DiscardManagerTests" runstate="Runnable" seed="817705316" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000925" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[<color=orange>[Utility AI]</color> Aoleu, am 8 cărți! Arunc 4 ca să scap de hoț...
+<color=red>[Regula lui 7]</color> Jucătorul uman trebuie să arunce 5 cărți.
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1022" name="GameLogicTests" fullname="GameLogicTests" classname="GameLogicTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.002899" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1023" name="TestareFazaInitialaJoc" fullname="GameLogicTests.TestareFazaInitialaJoc" methodname="TestareFazaInitialaJoc" classname="GameLogicTests" runstate="Runnable" seed="1786387933" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000428" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1019" name="GameManagerTests" fullname="GameManagerTests" classname="GameManagerTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.006118" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1020" name="AddVictoryPoint_ShouldIncrementPoints_AndTriggerWinCondition" fullname="GameManagerTests.AddVictoryPoint_ShouldIncrementPoints_AndTriggerWinCondition" methodname="AddVictoryPoint_ShouldIncrementPoints_AndTriggerWinCondition" classname="GameManagerTests" runstate="Runnable" seed="1555308292" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001049" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[<color=green>JUCĂTORUL Blue A CÂȘTIGAT JOCUL!</color>
+]]></output>
+        </test-case>
+        <test-case id="1021" name="CheckLargestArmy_ShouldTransferTrofee_AndAdjustVictoryPoints" fullname="GameManagerTests.CheckLargestArmy_ShouldTransferTrofee_AndAdjustVictoryPoints" methodname="CheckLargestArmy_ShouldTransferTrofee_AndAdjustVictoryPoints" classname="GameManagerTests" runstate="Runnable" seed="766022128" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000260" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1024" name="HarborTests" fullname="HarborTests" classname="HarborTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.006776" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1025" name="AssignToCorners_ShouldFindAndApplyBonusToValidAdjacentCorners" fullname="HarborTests.AssignToCorners_ShouldFindAndApplyBonusToValidAdjacentCorners" methodname="AssignToCorners_ShouldFindAndApplyBonusToValidAdjacentCorners" classname="HarborTests" runstate="Runnable" seed="1425705608" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.003166" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Colțul TestCorner a primit bonus de port: Wheat2to1
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1026" name="HexCoordinatesTests" fullname="HexCoordinatesTests" classname="HexCoordinatesTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.005546" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1029" name="AxialToWorld_ShouldCalculateCorrectYPosition_BasedOnRowCoordinate" fullname="HexCoordinatesTests.AxialToWorld_ShouldCalculateCorrectYPosition_BasedOnRowCoordinate" methodname="AxialToWorld_ShouldCalculateCorrectYPosition_BasedOnRowCoordinate" classname="HexCoordinatesTests" runstate="Runnable" seed="470546620" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000969" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1028" name="AxialToWorld_ShouldReturnOrigin_WhenCoordinatesAreZero" fullname="HexCoordinatesTests.AxialToWorld_ShouldReturnOrigin_WhenCoordinatesAreZero" methodname="AxialToWorld_ShouldReturnOrigin_WhenCoordinatesAreZero" classname="HexCoordinatesTests" runstate="Runnable" seed="1120709464" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000188" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1027" name="ConstructorAndProperties_ShouldCalculateCorrectSCoordinate" fullname="HexCoordinatesTests.ConstructorAndProperties_ShouldCalculateCorrectSCoordinate" methodname="ConstructorAndProperties_ShouldCalculateCorrectSCoordinate" classname="HexCoordinatesTests" runstate="Runnable" seed="1605070601" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000116" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1030" name="HexCornerTests" fullname="HexCornerTests" classname="HexCornerTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.005671" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1032" name="GiveHarborBonus_ShouldSetCorrectTradeRatio_ForGenericAndSpecificHarbors" fullname="HexCornerTests.GiveHarborBonus_ShouldSetCorrectTradeRatio_ForGenericAndSpecificHarbors" methodname="GiveHarborBonus_ShouldSetCorrectTradeRatio_ForGenericAndSpecificHarbors" classname="HexCornerTests" runstate="Runnable" seed="285076317" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001190" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Colțul New Game Object a primit bonus de port: Generic3to1
+Colțul New Game Object a primit bonus de port: Sheep2to1
+]]></output>
+        </test-case>
+        <test-case id="1031" name="IsValidForSettlement_ShouldReturnFalse_WhenNeighborIsOccupied" fullname="HexCornerTests.IsValidForSettlement_ShouldReturnFalse_WhenNeighborIsOccupied" methodname="IsValidForSettlement_ShouldReturnFalse_WhenNeighborIsOccupied" classname="HexCornerTests" runstate="Runnable" seed="1176849318" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000558" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1033" name="HexDataTests" fullname="HexDataTests" classname="HexDataTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.004150" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1034" name="Initialize_ShouldSetCoordinatesAndType_AndUpdateVisuals" fullname="HexDataTests.Initialize_ShouldSetCoordinatesAndType_AndUpdateVisuals" methodname="Initialize_ShouldSetCoordinatesAndType_AndUpdateVisuals" classname="HexDataTests" runstate="Runnable" seed="921856158" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001063" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1035" name="SetRobberStatus_ShouldModifyHasRobberFlag" fullname="HexDataTests.SetRobberStatus_ShouldModifyHasRobberFlag" methodname="SetRobberStatus_ShouldModifyHasRobberFlag" classname="HexDataTests" runstate="Runnable" seed="1336231843" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000205" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1036" name="HexEdgeTests" fullname="HexEdgeTests" classname="HexEdgeTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.005500" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1037" name="Awake_ShouldDeactivateVisuals_AndDisableCollider" fullname="HexEdgeTests.Awake_ShouldDeactivateVisuals_AndDisableCollider" methodname="Awake_ShouldDeactivateVisuals_AndDisableCollider" classname="HexEdgeTests" runstate="Runnable" seed="1363179203" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000884" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1038" name="BuildRoad_ShouldOccupyEdge_SetOwner_AndEnableRoadSprite" fullname="HexEdgeTests.BuildRoad_ShouldOccupyEdge_SetOwner_AndEnableRoadSprite" methodname="BuildRoad_ShouldOccupyEdge_SetOwner_AndEnableRoadSprite" classname="HexEdgeTests" runstate="Runnable" seed="47718565" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000790" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1039" name="MapGeneratorTests" fullname="MapGeneratorTests" classname="MapGeneratorTests" runstate="Runnable" testcasecount="2" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.005149" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1040" name="PrepareNextPlayer_ShouldResetDice_AndIncrementTurnCounter" fullname="MapGeneratorTests.PrepareNextPlayer_ShouldResetDice_AndIncrementTurnCounter" methodname="PrepareNextPlayer_ShouldResetDice_AndIncrementTurnCounter" classname="MapGeneratorTests" runstate="Runnable" seed="1660818160" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001149" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1041" name="ValidateCatanRules_ShouldReturnTrue_WhenNoAdjacentSixAndEightTokens" fullname="MapGeneratorTests.ValidateCatanRules_ShouldReturnTrue_WhenNoAdjacentSixAndEightTokens" methodname="ValidateCatanRules_ShouldReturnTrue_WhenNoAdjacentSixAndEightTokens" classname="MapGeneratorTests" runstate="Runnable" seed="972058286" result="Failed" label="Error" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000493" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at HexData.UpdateVisuals () [0x00038] in /Users/elenaistrate/HexLands/Assets/Scripts/Hexdata.cs:68 
+  at HexData.Initialize (System.Int32 q, System.Int32 r, HexData+ResourceType type, System.Int32 number) [0x0001d] in /Users/elenaistrate/HexLands/Assets/Scripts/Hexdata.cs:62 
+  at MapGeneratorTests.ValidateCatanRules_ShouldReturnTrue_WhenNoAdjacentSixAndEightTokens () [0x00024] in /Users/elenaistrate/HexLands/Assets/Tests/MapGeneratorTests.cs:62 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <67e9686a86934ae8b0ef7cc81c6b4608>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1042" name="MonopolyUITests" fullname="MonopolyUITests" classname="MonopolyUITests" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.005073" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1043" name="OnConfirmClick_ShouldStealAllChosenResourcesFromOpponent" fullname="MonopolyUITests.OnConfirmClick_ShouldStealAllChosenResourcesFromOpponent" methodname="OnConfirmClick_ShouldStealAllChosenResourcesFromOpponent" classname="MonopolyUITests" runstate="Runnable" seed="1351095586" result="Failed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001268" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[  Oponentul ar trebui să rămână cu 0 resurse de tipul ales.
+  Expected: 0
+  But was:  4
+]]></message>
+            <stack-trace><![CDATA[at MonopolyUITests.OnConfirmClick_ShouldStealAllChosenResourcesFromOpponent () [0x00073] in /Users/elenaistrate/HexLands/Assets/Tests/MonopolyUITests.cs:35
+]]></stack-trace>
+          </failure>
+          <output><![CDATA[<color=magenta>MONOPOLY!</color> Ghinion! Orange nu avea nicio resursă de tipul Wood.
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1044" name="OllamaAdvisorEvals" fullname="OllamaAdvisorEvals" classname="OllamaAdvisorEvals" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.336066" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1045" name="Eval_OllamaAdvisor_ReturnsValidBriefEnglishResponse" fullname="OllamaAdvisorEvals.Eval_OllamaAdvisor_ReturnsValidBriefEnglishResponse" methodname="Eval_OllamaAdvisor_ReturnsValidBriefEnglishResponse" classname="OllamaAdvisorEvals" runstate="Runnable" seed="1152005080" result="Failed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.332793" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[[EVAL TIMEOUT]: Ollama nu a răspuns în 10 secunde. Este pornită aplicația pe Mac?]]></message>
+            <stack-trace><![CDATA[at OllamaAdvisorEvals+<Eval_OllamaAdvisor_ReturnsValidBriefEnglishResponse>d__6.MoveNext () [0x00071] in /Users/elenaistrate/HexLands/Assets/Tests/OllamaAdvisorTests.cs:60
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in ./Library/PackageCache/com.unity.test-framework@76560ee600cb/UnityEngine.TestRunner/NUnitExtensions/Attributes/TestEnumerator.cs:44
+]]></stack-trace>
+          </failure>
+          <output><![CDATA[[EVAL] Se trimite starea jocului către Ollama (phi3)...
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1046" name="PlayerInventoryTests" fullname="PlayerInventoryTests" classname="PlayerInventoryTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.044409" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1047" name="PlayerInventory_AddResource_ShouldModifyCount_AndNotDropBelowZero" fullname="PlayerInventoryTests.PlayerInventory_AddResource_ShouldModifyCount_AndNotDropBelowZero" methodname="PlayerInventory_AddResource_ShouldModifyCount_AndNotDropBelowZero" classname="PlayerInventoryTests" runstate="Runnable" seed="1861714814" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.040742" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1048" name="PlayerResourceManagerTests" fullname="PlayerResourceManagerTests" classname="PlayerResourceManagerTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.006151" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1049" name="PlayerResourceManager_AddResource_And_CanAffordRoad_LogicCheck" fullname="PlayerResourceManagerTests.PlayerResourceManager_AddResource_And_CanAffordRoad_LogicCheck" methodname="PlayerResourceManager_AddResource_And_CanAffordRoad_LogicCheck" classname="PlayerResourceManagerTests" runstate="Runnable" seed="1665134004" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001154" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Jucătorul Blue a primit 1 Wood.
+Jucătorul Blue a primit 1 Brick.
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1050" name="SettlementPlacerTests" fullname="SettlementPlacerTests" classname="SettlementPlacerTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.004587" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1051" name="ActivateRoadBuildingCard_ShouldSetTwoRemainingRoads_AndChangeModeToPlacingRoad" fullname="SettlementPlacerTests.ActivateRoadBuildingCard_ShouldSetTwoRemainingRoads_AndChangeModeToPlacingRoad" methodname="ActivateRoadBuildingCard_ShouldSetTwoRemainingRoads_AndChangeModeToPlacingRoad" classname="SettlementPlacerTests" runstate="Runnable" seed="971981670" result="Passed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.000669" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1052" name="YearOfPlentyUITests" fullname="YearOfPlentyUITests" classname="YearOfPlentyUITests" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.005065" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1053" name="OnConfirmClick_ShouldAddCorrectResources_AndClosePanel" fullname="YearOfPlentyUITests.OnConfirmClick_ShouldAddCorrectResources_AndClosePanel" methodname="OnConfirmClick_ShouldAddCorrectResources_AndClosePanel" classname="YearOfPlentyUITests" runstate="Runnable" seed="1719904562" result="Failed" start-time="2026-06-08 16:54:52Z" end-time="2026-06-08 16:54:52Z" duration="0.001301" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[  Eroare: Dropdown index 0 ar fi trebuit să adauge exact 1 Wood!
+  Expected: 1
+  But was:  0
+]]></message>
+            <stack-trace><![CDATA[at YearOfPlentyUITests.OnConfirmClick_ShouldAddCorrectResources_AndClosePanel () [0x00075] in /Users/elenaistrate/HexLands/Assets/Tests/YearOfPlentyUITests.cs:46
+]]></stack-trace>
+          </failure>
+          <output><![CDATA[Year of Plenty: Resurse adăugate cu succes!
+Saving results to: /Users/elenaistrate/Library/Application Support/DefaultCompany/Catan/TestResults.xml
+]]></output>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
