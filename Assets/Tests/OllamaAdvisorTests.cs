@@ -16,16 +16,12 @@ public class OllamaAdvisorEvals
         // 1. Pregătim un mediu de test izolat în scenă
         testGo = new GameObject("OllamaTestEnvironment");
         
-        // Adăugăm componentele artificial, imitând ierarhia jocului
         gameManager = testGo.AddComponent<GameManager>();
         resourceManager = testGo.AddComponent<PlayerResourceManager>();
         advisor = testGo.AddComponent<OllamaAdvisor>();
 
-        // Forțăm configurarea inițială a resurselor pentru test
-        // Resetăm simularea pe jucătorul albastru (Blue)
         gameManager.currentPlayer = MapGenerator.Player.Blue;
 
-        // Îi dăm jucătorului resurse destule ca să poată construi (ex: 20 din fiecare)
         resourceManager.bluePlayer = new PlayerResourceManager.ResourceWallet {
             wood = 20, brick = 20, sheep = 20, wheat = 20, ore = 20
         };
@@ -34,56 +30,56 @@ public class OllamaAdvisorEvals
     [TearDown]
     public void Teardown()
     {
-        // Curățăm scena după test ca să nu poluăm celelalte 32 de teste
+        // Curățăm scena după test
         Object.DestroyImmediate(testGo);
     }
 
     [UnityTest]
     public IEnumerator Eval_OllamaAdvisor_ReturnsValidBriefEnglishResponse()
     {
-        // Forțăm manual executarea legăturilor din Start(), fiindcă rulăm în test izolat
+        // Forțăm executarea legăturilor din Start în mediul izolat
         advisor.Invoke("Start", 0);
 
-        // 2. Declanșăm interogarea către modelul local Phi-3
-        Debug.Log("[EVAL] Se trimite starea jocului către Ollama (phi3)...");
+        Debug.Log("[EVAL] Se trimite starea jocului către Ollama...");
         advisor.AskForRealAdvice();
 
-        // 3. Așteptăm ca Ollama să răspundă (Ollama local poate avea un lag de 1-5 secunde)
-        float timeout = 10f; // acordăm maximum 10 secunde pentru inferență locală
+        // Acordăm 20 de secunde pentru inferența pe calculatorul de Windows
+        float timeout = 20f; 
         float timer = 0f;
 
-        // Cât timp textul este cel default sau cel de încărcare, lăsăm timpul să treacă
         while (GetAdvisorText(advisor) == "Aștept o întrebare..." || GetAdvisorText(advisor) == "Advisor is thinking...")
         {
             if (timer >= timeout)
             {
-                Assert.Fail("[EVAL TIMEOUT]: Ollama nu a răspuns în 10 secunde. Este pornită aplicația pe Mac?");
+                Assert.Fail($"[EVAL TIMEOUT]: Ollama nu a răspuns în {timeout} secunde. " +
+                            "Asigură-te că pe PC-ul de Windows: 1. Aplicația Ollama este pornită activ în fundal, " +
+                            "2. Modelul corect (phi3) este descărcat rulând în terminal 'ollama pull phi3'.");
             }
-            timer += Time.deltaTime;
-            yield return null; // Așteaptă următorul cadru (frame)
+            
+            // Forțează procesarea cererilor HTTP de rețea în fundal pe Windows
+            System.Threading.Thread.Sleep(200); 
+            
+            timer += 0.2f;
+            yield return null; 
         }
 
         string aiResponse = GetAdvisorText(advisor);
-        Debug.Log($"[EVAL] Răspuns primit de la Phi-3: \"{aiResponse}\"");
+        Debug.Log($"[EVAL] Răspuns primit de la AI: \"{aiResponse}\"");
 
-        // 4. ASERȚIUNILE (Evaluarea propriu-zisă a Agentului)
-        
-        // Regula 1: Să nu avem eroare de conexiune reflectată în text
+        // ASERȚIUNILE DE EVALUARE A AGENTULUI
         Assert.IsFalse(aiResponse.Contains("Eroare de conexiune"), 
-            "Agentul a picat: A apărut o eroare de conexiune la serverul local Ollama.");
+            "Agentul a picat: Unity nu s-a putut conecta la serverul local Ollama (localhost:11434) pe Windows.");
 
-        // Regula 2: Modelul nu trebuie să returneze string-ul de eșec din parser-ul JSON
         Assert.AreNotEqual("Could not read the response.", aiResponse, 
-            "Agentul a picat: Structura JSON returnată de Ollama s-a modificat și parserul nu o mai poate citi.");
+            "Agentul a picat: Structura JSON returnată de Ollama s-a modificat și parserul nu o poate citi.");
 
-        // Regula 3: Verificăm calitatea (răspunsul nu trebuie să fie gol sau excesiv de scurt/aberant)
         Assert.IsTrue(aiResponse.Length > 5, 
-            $"Agentul a picat: Răspunsul este suspect de scurt ({aiResponse.Length} caractere).");
+            $"Agentul a picat: Răspunsul primit este suspect de scurt ({aiResponse.Length} caractere).");
             
-        Debug.Log("[EVAL PASSED]: Jucătorul a primit un sfat valid de la Phi-3!");
+        Debug.Log("[EVAL PASSED]: Jucătorul a primit un sfat valid de la modelul local de pe Windows!");
     }
 
-    // Funcție ajutătoare de Reflection pentru a citi variabila privată 'codeAdvisorText' din OllamaAdvisor
+    // Funcție ajutătoare de Reflection pentru a citi variabila privată 'codeAdvisorText'
     private string GetAdvisorText(OllamaAdvisor targetAdvisor)
     {
         var field = typeof(OllamaAdvisor).GetField("codeAdvisorText", 
