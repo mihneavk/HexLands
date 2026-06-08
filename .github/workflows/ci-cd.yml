@@ -40,7 +40,7 @@ jobs:
           name: Test-Results
           path: ${{ steps.tests.outputs.artifactsPath }}
 
-  # STAGIUL 2: COMPILAREA JOCULUI (BUILD) - Rulează doar dacă trec testele
+  # STAGIUL 2: COMPILAREA JOCULUI (BUILD)
   build-game:
     name: Build HexLands Game 
     needs: run-unit-tests
