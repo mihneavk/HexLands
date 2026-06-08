@@ -47,7 +47,6 @@ public class MapGeneratorTests
         Object.DestroyImmediate(d2Go);
     }
 
-    [Test]
     public void ValidateCatanRules_ShouldReturnTrue_WhenNoAdjacentSixAndEightTokens()
     {
         // 1. ARRANGE

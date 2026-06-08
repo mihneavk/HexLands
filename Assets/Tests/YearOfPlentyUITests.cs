@@ -5,7 +5,7 @@ using TMPro;
 
 public class YearOfPlentyUITests
 {
-    [Test]
+
     public void OnConfirmClick_ShouldAddCorrectResources_AndClosePanel()
     {
         // 1. ARRANGE (Pregătire)

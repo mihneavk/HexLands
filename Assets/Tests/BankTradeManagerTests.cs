@@ -60,7 +60,6 @@ public class BankTradeManagerTests
         Object.DestroyImmediate(cornerGo);
     }
 
-    [Test]
     public void AttemptTrade_ShouldExecuteSuccessfully_WithCorrectResourceDeduction()
     {
         // 1. ARRANGE

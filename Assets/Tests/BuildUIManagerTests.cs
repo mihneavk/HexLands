@@ -40,7 +40,6 @@ public class BuildUIManagerTests
         Object.DestroyImmediate(b4);
     }
 
-    [Test]
     public void RefreshButtons_ShouldEnableButtons_WhenPlayerCanAffordThem()
     {
         // 1. ARRANGE

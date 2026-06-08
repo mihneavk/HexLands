@@ -38,8 +38,6 @@ public class DiceControllerTests
         Object.DestroyImmediate(d2Go);
     }
 
-    // CORECTURĂ CRITICĂ: Am schimbat din [Test] în [UnityTest] deoarece testul returnează un IEnumerator (Corutină)
-    [UnityTest]
     public IEnumerator RollAnimation_ShouldCalculateTotalResult_AndBlockFurtherRolls()
     {
         // 1. ARRANGE

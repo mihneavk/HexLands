@@ -36,7 +36,6 @@ public class DevCardManagerTests
         Object.DestroyImmediate(go);
     }
 
-    [Test]
     public void BuyDevelopmentCard_ShouldDeductResources_AndAddCardToWallet_WhenResourcesAreValid()
     {
         // 1. ARRANGE

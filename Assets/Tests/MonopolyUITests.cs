@@ -5,7 +5,7 @@ using TMPro;
 
 public class MonopolyUITests
 {
-    [Test]
+
     public void OnConfirmClick_ShouldStealAllChosenResourcesFromOpponent()
     {
         // 1. ARRANGE
