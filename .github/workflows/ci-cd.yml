@@ -17,19 +17,24 @@ jobs:
         with:
           lfs: true
 
-      - name: Run Tests & Agent Evals
-        uses: game-ci/unity-test-runner@v4
-        id: tests
-        with:
-          unityVersion: auto 
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
+      # Creează folderul de rezultate înainte de rulare pentru a evita erorile de cale
+      - name: Create Build Directories
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path build/tests
+
+      # Deschidem Unity 6 (6000.4.6f1) instalat pe calculatorul lui pentru a rula testele și evaluările de AI
+      - name: Run Tests via Local Unity CLI
+        shell: powershell
+        run: |
+          & "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" -batchmode -runTests -testPlatform EditMode -projectPath . -testResults build/tests/editmode-results.xml -logFile build/tests/unity-test-log.txt
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Test-Results
-          path: ${{ steps.tests.outputs.artifactsPath }}
+          path: build/tests/
 
   # STAGIUL 2: COMPILAREA JOCULUI (BUILD)
   build-game:
@@ -42,11 +47,11 @@ jobs:
         with:
           lfs: true
 
-      - name: Build Game
-        uses: game-ci/unity-builder@v4
-        with:
-          unityVersion: auto
-          targetPlatform: StandaloneWindows64
+      # Generăm executabilul jocului folosind kitul local de Unity 6 (6000.4.6f1)
+      - name: Build Game via Local Unity CLI
+        shell: powershell
+        run: |
+          & "C:\Program Files\Unity\Hub\Editor\6000.4.6f1\Editor\Unity.exe" -batchmode -quit -projectPath . -buildWindows64Player build/StandaloneWindows64/HexLands.exe -logFile build/unity-build-log.txt
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
