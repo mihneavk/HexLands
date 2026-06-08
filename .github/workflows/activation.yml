@@ -1,19 +1,18 @@
-name: Get Unity Activation File 
+name: Generate Unity License Automatically 
 
 on: workflow_dispatch
 
 jobs:
-  get-alf:
-    name: Request Activation File (.alf)
+  generate-license:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: game-ci/unity-request-activation-file@v1
-        id: get-alf
+
+      - name: Generate License File
+        uses: game-ci/unity-login@v4
         with:
-          unityVersion: auto
-      - name: Upload ALF File
-        uses: actions/upload-artifact@v4
-        with:
-          name: Unity-Activation-File
-          path: ${{ steps.get-alf.outputs.filePath }}
+          unityEmail: ${{ secrets.UNITY_EMAIL }}
+          unityPassword: ${{ secrets.UNITY_PASSWORD }}
+
+      - name: Display License Info
+        run: echo "Licența a fost generată cu succes în background!"
