@@ -26,7 +26,14 @@ jobs:
           key: Library-${{ hashFiles('ProjectSettings/ProjectVersion.txt') }}
           restore-keys: Library-
 
-      # 3. Rulează Testele (Își face login singur prin env)
+      # 3. Autentificarea oficială în Unity Hub (Versiunea v4)
+      - name: Login to Unity
+        uses: game-ci/unity-login@v4
+        with:
+          unityEmail: ${{ secrets.UNITY_EMAIL }}
+          unityPassword: ${{ secrets.UNITY_PASSWORD }}
+
+      # 4. Rulează Testele prin GameCI
       - name: Run Tests
         uses: game-ci/unity-test-runner@v4
         id: tests
@@ -37,7 +44,7 @@ jobs:
           unityVersion: auto 
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Salvează rezultatele testelor
+      # 5. Salvează rezultatele testelor
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
@@ -63,7 +70,14 @@ jobs:
           key: Library-Build-${{ hashFiles('ProjectSettings/ProjectVersion.txt') }}
           restore-keys: Library-Build-
 
-      # Construiește executabilul de Windows (Își face login singur prin env)
+      # Autentificare și la Build (v4)
+      - name: Login to Unity for Build
+        uses: game-ci/unity-login@v4
+        with:
+          unityEmail: ${{ secrets.UNITY_EMAIL }}
+          unityPassword: ${{ secrets.UNITY_PASSWORD }}
+
+      # Construiește executabilul de Windows
       - name: Build Game
         uses: game-ci/unity-builder@v4
         env:
