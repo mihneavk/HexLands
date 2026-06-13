@@ -2,6 +2,8 @@
 
 Un joc complet funcțional bazat pe regulile clasicului board game "Colonistii din Catan", dezvoltat de la zero în Unity (C#). Acest proiect nu este doar o replică a jocului original, ci o demonstrație tehnică avansată de **Inteligență Artificială**, combinând algoritmi de decizie matematici cu un model de limbaj de ultimă generație (LLM).
 
+[Demo](https://youtu.be/9_6zcQmxeuw)
+
 ## ✨ Caracteristici Principale
 
 ### 🗺️ Hartă Procedurală & Reguli de Bază
@@ -51,3 +53,7 @@ Pentru a facilita testarea mecanicii, am implementat următoarele comenzi rapide
 4. Apasă Play din editor sau dă Build pentru platforma dorită (Windows/Mac/Linux).
 
 <img width="1065" height="1179" alt="uml" src="https://github.com/user-attachments/assets/9bc99c45-37a9-43ce-891e-aaadefefe125" />
+<img width="1377" height="1226" alt="image" src="https://github.com/user-attachments/assets/06b289c6-e6c0-4952-a265-4402d08e2a03" />
+<img width="1374" height="1242" alt="image" src="https://github.com/user-attachments/assets/cc2ac89a-7f6b-46fa-8532-21047bfe3425" />
+
+
